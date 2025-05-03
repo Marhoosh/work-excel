@@ -1,6 +1,6 @@
 import openpyxl
 from openpyxl.utils import get_column_letter
-from openpyxl.styles import numbers
+from openpyxl.styles import numbers, Alignment
 import os
 import time
 import datetime
@@ -223,6 +223,10 @@ def process_excel_file(file_a_path, file_b_path, output_path, col_x, col_y, shee
             
             # 执行合并
             ws_result.merge_cells(merge_range)
+            
+            # 设置合并后单元格的对齐方式为居中
+            merged_cell = ws_result.cell(row=min_row, column=min_col)
+            merged_cell.alignment = Alignment(horizontal='center', vertical='center')
     
     # 修复可能出现的文件名问题
     if ".." in output_path:
@@ -573,6 +577,10 @@ def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sh
                 try:
                     # 执行合并
                     ws_result.merge_cells(merge_range)
+                    
+                    # 设置合并后单元格的对齐方式为居中
+                    merged_cell = ws_result.cell(row=min_row, column=min_col)
+                    merged_cell.alignment = Alignment(horizontal='center', vertical='center')
                 except Exception as e:
                     print(f"合并单元格 {merge_range} 时出错: {str(e)}")
     
