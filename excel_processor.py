@@ -221,12 +221,15 @@ def process_excel_file(file_a_path, file_b_path, output_path, col_x, col_y, shee
             end_cell = f"{get_column_letter(max_col)}{max_row}"
             merge_range = f"{start_cell}:{end_cell}"
             
-            # 执行合并
-            ws_result.merge_cells(merge_range)
-            
-            # 设置合并后单元格的对齐方式为居中
-            merged_cell = ws_result.cell(row=min_row, column=min_col)
-            merged_cell.alignment = Alignment(horizontal='center', vertical='center')
+            try:
+                # 执行合并
+                ws_result.merge_cells(merge_range)
+                
+                # 设置合并后单元格的对齐方式为居中
+                merged_cell = ws_result.cell(row=min_row, column=min_col)
+                merged_cell.alignment = Alignment(horizontal='center', vertical='center')
+            except Exception as e:
+                print(f"合并单元格 {merge_range} 时出错: {str(e)}")
     
     # 修复可能出现的文件名问题
     if ".." in output_path:
@@ -406,6 +409,11 @@ def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sh
     header_added = False
     start_row = 1
     
+    # 用于收集所有文件的合并单元格信息
+    all_cells_to_merge = {}
+    # 创建一个全局行映射，记录原始文件中的行号与结果表中行号的对应关系
+    global_row_mapping = {}
+    
     # 处理每个A表文件
     for file_index, file_a_path in enumerate(file_a_paths):
         # 获取该文件的工作表名
@@ -544,43 +552,34 @@ def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sh
                     # 获取原始合并范围
                     o_min_row, o_min_col, o_max_row, o_max_col = merged_ranges[original_cell_key]
                     
-                    # 创建原始行到结果表行的映射
-                    orig_to_result_row_map = {}
+                    # 记录原始行到结果表行的映射，用于最终合并单元格
+                    file_key = f"file_{file_index}"
+                    if file_key not in global_row_mapping:
+                        global_row_mapping[file_key] = {}
                     
-                    # 记录当前行映射到结果表的位置
-                    orig_to_result_row_map[original_row_idx] = target_row
+                    # 记录当前行映射
+                    global_row_mapping[file_key][original_row_idx] = target_row
                     
-                    # 计算新的合并范围
-                    # 对于表头之前的行不进行合并操作
+                    # 保存合并单元格信息，稍后统一处理
                     if o_min_row > 1:  # 跳过第一行（表头）
-                        # 检查是否所有需要合并的行都找到了匹配
-                        merge_rows_matched = True
-                        
-                        # 查找原始表中所有需要合并的行是否都在匹配行中
+                        # 查找原始表中所有需要合并的行
                         rows_to_merge = set(range(o_min_row, o_max_row + 1))
                         matched_merge_rows = set(matching_row_indices) & rows_to_merge
                         
+                        # 只有当所有需要合并的行都匹配上时，才记录此合并信息
                         if len(matched_merge_rows) == len(rows_to_merge):
-                            # 所有合并行都匹配上了，计算结果表中的合并范围
+                            merge_info = {
+                                'file_index': file_index,
+                                'o_min_row': o_min_row,
+                                'o_min_col': o_min_col,
+                                'o_max_row': o_max_row,
+                                'o_max_col': o_max_col,
+                                'matching_rows': matching_row_indices.copy(),
+                                'matched_merge_rows': list(matched_merge_rows)
+                            }
                             
-                            # 找出合并范围内每一行在结果表中的位置
-                            for row_index, matching_idx in enumerate(matching_row_indices):
-                                if o_min_row <= matching_idx <= o_max_row:
-                                    orig_to_result_row_map[matching_idx] = start_row + row_index
-                        
-                            # 获取合并范围内最小和最大行在结果表中的位置
-                            result_rows = [orig_to_result_row_map[matching_idx] for matching_idx in matched_merge_rows]
-                            new_min_row = min(result_rows)
-                            new_max_row = max(result_rows)
-                            
-                            # 存储合并信息，使用列索引相同但行索引映射后的值
-                            merge_key = (o_min_row, o_min_col, o_max_row, o_max_col)
-                            if merge_key not in cells_to_merge:
-                                cells_to_merge[merge_key] = (new_min_row, o_min_col, new_max_row, o_max_col)
-                                print(f"将合并单元格: 原始范围=({o_min_row},{o_min_col})-({o_max_row},{o_max_col}) -> 结果表范围=({new_min_row},{o_min_col})-({new_max_row},{o_max_col})")
-                        else:
-                            # 不是所有合并行都匹配上了，跳过此合并
-                            print(f"跳过合并单元格: 原始范围=({o_min_row},{o_min_col})-({o_max_row},{o_max_col})，因为不是所有行都匹配")
+                            merge_key = (file_index, o_min_row, o_min_col, o_max_row, o_max_col)
+                            all_cells_to_merge[merge_key] = merge_info
             
             # 只统计非表头行
             if original_row_idx > 1 or not header_added:
@@ -608,6 +607,62 @@ def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sh
     # 如果没有找到匹配的数据，返回0
     if total_matches == 0:
         return 0, None
+    
+    # 处理所有文件中收集到的合并单元格信息
+    cells_to_merge = {}
+    
+    for merge_key, merge_info in all_cells_to_merge.items():
+        file_index = merge_info['file_index']
+        o_min_row = merge_info['o_min_row']
+        o_min_col = merge_info['o_min_col']
+        o_max_row = merge_info['o_max_row'] 
+        o_max_col = merge_info['o_max_col']
+        matched_merge_rows = merge_info['matched_merge_rows']
+        
+        file_key = f"file_{file_index}"
+        row_mapping = global_row_mapping.get(file_key, {})
+        
+        if not row_mapping:
+            print(f"警告: 文件 {file_index} 的行映射信息丢失，跳过合并单元格")
+            continue
+        
+        # 获取合并范围内所有行在结果表中的位置
+        result_rows = []
+        for row_idx in matched_merge_rows:
+            if row_idx in row_mapping:
+                result_rows.append(row_mapping[row_idx])
+        
+        if not result_rows:
+            print(f"警告: 文件 {file_index} 合并范围 ({o_min_row},{o_min_col})-({o_max_row},{o_max_col}) 在结果表中找不到对应行")
+            continue
+        
+        # 计算结果表中的合并范围
+        new_min_row = min(result_rows)
+        new_max_row = max(result_rows)
+        
+        # 保存合并信息
+        final_merge_key = (new_min_row, o_min_col, new_max_row, o_max_col)
+        cells_to_merge[final_merge_key] = (new_min_row, o_min_col, new_max_row, o_max_col)
+        print(f"将合并单元格: 文件{file_index+1}原始范围=({o_min_row},{o_min_col})-({o_max_row},{o_max_col}) -> 结果表范围=({new_min_row},{o_min_col})-({new_max_row},{o_max_col})")
+    
+    # 在结果表中合并单元格
+    for _, (min_row, min_col, max_row, max_col) in cells_to_merge.items():
+        # 只有当范围至少包含2个单元格时才合并
+        if min_row != max_row or min_col != max_col:
+            # 获取合并单元格的范围字符串
+            start_cell = f"{get_column_letter(min_col)}{min_row}"
+            end_cell = f"{get_column_letter(max_col)}{max_row}"
+            merge_range = f"{start_cell}:{end_cell}"
+            
+            try:
+                # 执行合并
+                ws_result.merge_cells(merge_range)
+                
+                # 设置合并后单元格的对齐方式为居中
+                merged_cell = ws_result.cell(row=min_row, column=min_col)
+                merged_cell.alignment = Alignment(horizontal='center', vertical='center')
+            except Exception as e:
+                print(f"合并单元格 {merge_range} 时出错: {str(e)}")
     
     # 修复可能出现的文件名问题
     if ".." in output_path:
@@ -640,7 +695,7 @@ def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sh
 
 def main():
     # 文件路径直接写在代码中
-    file_a_path = "麓城店日报表2025.5.2.xlsx"
+    file_a_path = ["麓城店日报表2025.5.2.xlsx", "麓城店日报表2025.5.2.xlsx"]  # 使用相同文件测试多文件处理
     file_b_path = "患者库.xlsx"
     output_path = "匹配结果.xlsx"  # 输出文件路径
     
