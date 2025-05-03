@@ -8,7 +8,8 @@ class ExcelProcessorUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Excel数据处理工具")
-        self.root.geometry("750x650")
+        self.root.geometry("800x650")
+        self.root.minsize(780, 600)
         self.root.resizable(True, True)
         
         # 设置主题样式
@@ -42,7 +43,7 @@ class ExcelProcessorUI:
     def create_widgets(self):
         # 创建一个主滚动框架来容纳所有内容
         # 先创建一个Canvas
-        main_canvas = tk.Canvas(self.root, bg="#f0f0f0")
+        main_canvas = tk.Canvas(self.root, bg="#f0f0f0", width=730)
         main_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
         # 为Canvas添加滚动条
@@ -55,7 +56,7 @@ class ExcelProcessorUI:
         
         # 在Canvas上创建一个框架以放置所有控件
         scrollable_frame = ttk.Frame(main_canvas, style="TFrame")
-        main_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw", width=main_canvas.winfo_reqwidth())
+        main_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw", width=710)
         
         # 主框架
         main_frame = ttk.Frame(scrollable_frame, padding="20 20 20 20", style="TFrame")
@@ -159,8 +160,8 @@ class ExcelProcessorUI:
         
         # 设置列宽和标题
         self.files_tree.column("序号", width=50, anchor="center")
-        self.files_tree.column("文件路径", width=300)
-        self.files_tree.column("工作表名称", width=100, anchor="center")
+        self.files_tree.column("文件路径", width=450)
+        self.files_tree.column("工作表名称", width=150, anchor="center")
         
         self.files_tree.heading("序号", text="序号")
         self.files_tree.heading("文件路径", text="文件路径")
@@ -227,7 +228,7 @@ class ExcelProcessorUI:
 - 比较列：用于与B表比较的列，可以是字母(A,B,C)或数字(1,2,3)
 - 对于含有多个工作表的Excel文件，可以单独指定要处理的工作表"""
         
-        ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=500, justify=tk.LEFT).pack(pady=5)
+        ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
     
     def setup_b_tab(self, parent):
         # B表文件路径
@@ -237,7 +238,7 @@ class ExcelProcessorUI:
         ttk.Label(path_frame, text="B表文件路径:", style="TLabel").pack(side=tk.LEFT)
         
         self.b_file_path = tk.StringVar()
-        path_entry = ttk.Entry(path_frame, textvariable=self.b_file_path, width=40)
+        path_entry = ttk.Entry(path_frame, textvariable=self.b_file_path, width=60)
         path_entry.pack(side=tk.LEFT, padx=5)
         
         browse_button = ttk.Button(path_frame, text="浏览...", command=self.browse_b_file)
@@ -274,7 +275,7 @@ class ExcelProcessorUI:
 - 工作表名称：要处理的工作表名称，留空将使用默认活动表
 - 比较列：用于与A表比较的列，可以是字母(A,B,C)或数字(1,2,3)"""
         
-        ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=500, justify=tk.LEFT).pack(pady=5)
+        ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
     
     def setup_output_tab(self, parent):
         # 输出文件夹路径
@@ -284,7 +285,7 @@ class ExcelProcessorUI:
         ttk.Label(path_frame, text="输出文件夹:", style="TLabel").pack(side=tk.LEFT)
         
         self.output_folder_path = tk.StringVar()
-        path_entry = ttk.Entry(path_frame, textvariable=self.output_folder_path, width=40)
+        path_entry = ttk.Entry(path_frame, textvariable=self.output_folder_path, width=60)
         path_entry.pack(side=tk.LEFT, padx=5)
         
         browse_button = ttk.Button(path_frame, text="浏览...", command=self.browse_output_folder)
@@ -329,7 +330,7 @@ class ExcelProcessorUI:
 4. 程序会自动识别并保持原A表中的合并单元格状态
 5. 当处理多个A表文件时，所有匹配的行将合并到一个结果文件中"""
         
-        ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=500, justify=tk.LEFT).pack(pady=5)
+        ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
     
     def add_a_file(self):
         """添加A表文件到列表"""
