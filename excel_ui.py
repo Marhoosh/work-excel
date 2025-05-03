@@ -684,7 +684,8 @@ class ExcelProcessorUI:
                 
                 # 询问是否打开文件
                 if messagebox.askyesno("处理完成", f"找到 {count} 行匹配数据，已保存到\n{saved_path}\n\n是否打开此文件?"):
-                    os.startfile(saved_path)
+                    # 使用全局函数打开文件
+                    open_file(saved_path)
             else:
                 self.root.after(0, lambda: self.status_var.set("处理未完成"))
                 self.root.after(0, lambda: self.result_text.insert(tk.END, "未找到匹配的数据或保存文件失败。"))
@@ -693,6 +694,22 @@ class ExcelProcessorUI:
             self.root.after(0, lambda: self.status_var.set("处理失败"))
             self.root.after(0, lambda: self.result_text.insert(tk.END, error_message))
             self.root.after(0, lambda: messagebox.showerror("错误", error_message))
+
+def open_file(file_path):
+    """跨平台打开文件的函数"""
+    try:
+        if platform.system() == "Windows":
+            os.startfile(file_path)
+        elif platform.system() == "Darwin":  # macOS
+            import subprocess
+            subprocess.call(["open", file_path])
+        else:  # Linux 或其他系统
+            import subprocess
+            subprocess.call(["xdg-open", file_path])
+    except Exception as e:
+        print(f"打开文件失败: {e}")
+        return False
+    return True
 
 def main():
     # 处理高DPI显示的问题
