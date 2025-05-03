@@ -2,7 +2,45 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, simpledialog
 import os
 import threading
-from excel_processor import process_excel_files
+import sys
+import importlib.util
+
+# 处理PyInstaller打包后的资源路径
+def resource_path(relative_path):
+    """获取资源的绝对路径，处理PyInstaller打包后的路径问题"""
+    try:
+        # PyInstaller创建临时文件夹并将资源存储在_MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        # 如果不是打包模式，使用正常的相对路径
+        base_path = os.path.abspath(".")
+    
+    return os.path.join(base_path, relative_path)
+
+# 动态导入excel_processor模块
+def import_excel_processor():
+    """动态导入excel_processor模块，处理打包后的导入问题"""
+    try:
+        # 先尝试常规导入
+        from excel_processor import process_excel_files
+        return process_excel_files
+    except ImportError:
+        # 如果常规导入失败，尝试从打包路径导入
+        try:
+            processor_path = resource_path("excel_processor.py")
+            if os.path.exists(processor_path):
+                spec = importlib.util.spec_from_file_location("excel_processor", processor_path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                return module.process_excel_files
+            else:
+                raise ImportError("找不到excel_processor.py文件")
+        except Exception as e:
+            messagebox.showerror("错误", f"导入excel_processor模块失败: {str(e)}")
+            sys.exit(1)
+
+# 获取process_excel_files函数
+process_excel_files = import_excel_processor()
 
 class ExcelProcessorUI:
     def __init__(self, root):
