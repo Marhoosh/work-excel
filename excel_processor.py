@@ -1,6 +1,6 @@
 import openpyxl
 from openpyxl.utils import get_column_letter
-from openpyxl.styles import numbers, Alignment
+from openpyxl.styles import numbers, Alignment, Border, Side
 import os
 import time
 import datetime
@@ -232,6 +232,11 @@ def process_excel_file(file_a_path, file_b_path, output_path, col_x, col_y, shee
     if ".." in output_path:
         output_path = output_path.replace("..", ".")
     
+    # 为结果表中的所有已使用单元格添加边框
+    for row in ws_result.iter_rows(min_row=1, max_row=ws_result.max_row):
+        for cell in row:
+            set_cell_borders(cell)
+    
     # 添加时间戳到文件名
     file_name, file_ext = os.path.splitext(output_path)
     timestamp = time.strftime("%Y%m%d_%H%M%S")
@@ -321,6 +326,22 @@ def copy_cell_format_and_style(source_cell, target_cell, is_date_column=False):
         # 普通值，直接复制
         target_cell.value = value
         target_cell.number_format = cell_format
+        
+    # 复制对齐方式（如果有）
+    if source_cell.alignment:
+        try:
+            # 创建新的对齐方式对象，避免使用原始StyleProxy对象
+            target_cell.alignment = Alignment(
+                horizontal=source_cell.alignment.horizontal,
+                vertical=source_cell.alignment.vertical,
+                textRotation=getattr(source_cell.alignment, 'textRotation', 0),
+                wrapText=getattr(source_cell.alignment, 'wrapText', False),
+                shrinkToFit=getattr(source_cell.alignment, 'shrinkToFit', False),
+                indent=getattr(source_cell.alignment, 'indent', 0)
+            )
+        except:
+            # 如果无法获取对齐属性，忽略错误
+            pass
 
 def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sheet_a=None, sheet_b=None, output_sheet=None, sheet_a_map=None):
     """
@@ -592,6 +613,11 @@ def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sh
     if ".." in output_path:
         output_path = output_path.replace("..", ".")
     
+    # 为结果表中的所有已使用单元格添加边框
+    for row in ws_result.iter_rows(min_row=1, max_row=ws_result.max_row):
+        for cell in row:
+            set_cell_borders(cell)
+    
     # 添加时间戳到文件名
     file_name, file_ext = os.path.splitext(output_path)
     timestamp = time.strftime("%Y%m%d_%H%M%S")
@@ -640,6 +666,16 @@ def main():
         print(f"处理完成，找到 {count} 行匹配的数据，已保存到文件 {saved_path}")
     else:
         print("未找到匹配的数据或保存文件失败")
+
+def set_cell_borders(cell):
+    """设置单元格的所有边框"""
+    thin_border = Border(
+        left=Side(style='thin'), 
+        right=Side(style='thin'), 
+        top=Side(style='thin'), 
+        bottom=Side(style='thin')
+    )
+    cell.border = thin_border
 
 if __name__ == "__main__":
     main() 
