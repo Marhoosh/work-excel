@@ -4,6 +4,7 @@ import os
 import threading
 import sys
 import importlib.util
+import platform
 
 # 处理PyInstaller打包后的资源路径
 def resource_path(relative_path):
@@ -46,8 +47,16 @@ class ExcelProcessorUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Excel数据处理工具")
-        self.root.geometry("800x650")
-        self.root.minsize(780, 600)
+        
+        # 设置适应不同平台的窗口大小
+        system = platform.system()
+        if system == "Darwin":  # macOS
+            self.root.geometry("850x650")
+            self.root.minsize(820, 600)
+        else:
+            self.root.geometry("800x650")
+            self.root.minsize(780, 600)
+            
         self.root.resizable(True, True)
         
         # 设置主题样式
@@ -79,22 +88,32 @@ class ExcelProcessorUI:
         self.create_widgets()
     
     def create_widgets(self):
-        # 创建一个主滚动框架来容纳所有内容
-        # 先创建一个Canvas
-        main_canvas = tk.Canvas(self.root, bg="#f0f0f0", width=730)
+        # 创建一个主容器框架
+        main_container = ttk.Frame(self.root, style="TFrame")
+        main_container.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        # 先创建一个Canvas，用于实现滚动效果
+        main_canvas = tk.Canvas(main_container, bg="#f0f0f0")
         main_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
-        # 为Canvas添加滚动条
-        main_scrollbar = ttk.Scrollbar(self.root, orient=tk.VERTICAL, command=main_canvas.yview)
-        main_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        # 为Canvas添加垂直滚动条
+        y_scrollbar = ttk.Scrollbar(main_container, orient=tk.VERTICAL, command=main_canvas.yview)
+        y_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
-        # 配置Canvas
-        main_canvas.configure(yscrollcommand=main_scrollbar.set)
+        # 添加水平滚动条
+        x_scrollbar = ttk.Scrollbar(self.root, orient=tk.HORIZONTAL, command=main_canvas.xview)
+        x_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        # 配置Canvas的滚动
+        main_canvas.configure(yscrollcommand=y_scrollbar.set, xscrollcommand=x_scrollbar.set)
         main_canvas.bind('<Configure>', lambda e: main_canvas.configure(scrollregion=main_canvas.bbox("all")))
         
         # 在Canvas上创建一个框架以放置所有控件
         scrollable_frame = ttk.Frame(main_canvas, style="TFrame")
-        main_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw", width=710)
+        
+        # 固定内容宽度，确保水平滚动有效
+        content_width = 750 if platform.system() != "Darwin" else 800  # Mac系统使用更宽的尺寸
+        main_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw", width=content_width)
         
         # 主框架
         main_frame = ttk.Frame(scrollable_frame, padding="20 20 20 20", style="TFrame")
@@ -102,8 +121,24 @@ class ExcelProcessorUI:
         
         # 绑定鼠标滚轮事件
         def _on_mousewheel(event):
-            main_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        main_canvas.bind_all("<MouseWheel>", _on_mousewheel)
+            # 根据平台处理滚轮事件，确保在所有系统上都能工作
+            if platform.system() == "Windows":
+                main_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            elif platform.system() == "Darwin":  # macOS
+                main_canvas.yview_scroll(int(-1*(event.delta)), "units")
+            else:  # Linux
+                if event.num == 4:
+                    main_canvas.yview_scroll(-1, "units")
+                elif event.num == 5:
+                    main_canvas.yview_scroll(1, "units")
+                
+        # 绑定滚轮事件，兼容不同平台
+        if platform.system() == "Windows" or platform.system() == "Darwin":
+            main_canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        else:
+            # Linux
+            main_canvas.bind_all("<Button-4>", _on_mousewheel)
+            main_canvas.bind_all("<Button-5>", _on_mousewheel)
         
         # 标题
         header = ttk.Label(main_frame, text="Excel数据处理工具", style="Header.TLabel")
@@ -172,9 +207,9 @@ class ExcelProcessorUI:
         self.result_text.pack(fill=tk.BOTH, expand=True)
         
         # 滚动条
-        scrollbar = ttk.Scrollbar(self.result_text, command=self.result_text.yview)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.result_text.config(yscrollcommand=scrollbar.set)
+        result_scrollbar = ttk.Scrollbar(self.result_text, command=self.result_text.yview)
+        result_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.result_text.config(yscrollcommand=result_scrollbar.set)
         
         # 设置默认值
         self.set_default_values()
@@ -182,6 +217,24 @@ class ExcelProcessorUI:
         # 确保Canvas可以滚动所有内容
         scrollable_frame.update_idletasks()
         main_canvas.config(scrollregion=main_canvas.bbox("all"))
+        
+        # 添加调整大小事件处理
+        self.root.bind("<Configure>", lambda event: self._on_resize(event, main_canvas, scrollable_frame))
+    
+    def _on_resize(self, event, canvas, frame):
+        """处理窗口大小调整"""
+        # 获取当前画布的宽度
+        canvas_width = event.width - 30  # 减去滚动条和边距的空间
+        
+        # 确保最小宽度
+        min_width = 750 if platform.system() != "Darwin" else 800
+        canvas_width = max(canvas_width, min_width)
+        
+        # 更新canvas window的宽度
+        canvas.itemconfig(canvas.find_withtag("all")[0], width=canvas_width)
+        
+        # 更新滚动区域
+        canvas.configure(scrollregion=canvas.bbox("all"))
     
     def setup_a_tab(self, parent):
         # A表文件列表框架
@@ -192,59 +245,97 @@ class ExcelProcessorUI:
         self.files_listbox_frame = ttk.Frame(files_frame)
         self.files_listbox_frame.pack(fill=tk.BOTH, expand=True, pady=5)
         
-        # 创建Treeview用于显示文件列表
+        # 创建Treeview用于显示文件列表，并使用水平滚动
+        tree_container = ttk.Frame(self.files_listbox_frame)
+        tree_container.pack(fill=tk.BOTH, expand=True)
+        
+        # 创建Treeview的垂直滚动条
+        tree_vsb = ttk.Scrollbar(tree_container, orient="vertical")
+        tree_vsb.pack(side="right", fill="y")
+        
+        # 创建Treeview的水平滚动条
+        tree_hsb = ttk.Scrollbar(tree_container, orient="horizontal")
+        tree_hsb.pack(side="bottom", fill="x")
+        
+        # 创建Treeview
         columns = ("序号", "文件路径", "工作表名称")
-        self.files_tree = ttk.Treeview(self.files_listbox_frame, columns=columns, show="headings", height=7)
+        self.files_tree = ttk.Treeview(tree_container, columns=columns, show="headings", 
+                                       height=7, yscrollcommand=tree_vsb.set, xscrollcommand=tree_hsb.set)
+        
+        # 设置滚动条的命令
+        tree_vsb.config(command=self.files_tree.yview)
+        tree_hsb.config(command=self.files_tree.xview)
         
         # 设置列宽和标题
-        self.files_tree.column("序号", width=50, anchor="center")
-        self.files_tree.column("文件路径", width=450)
-        self.files_tree.column("工作表名称", width=150, anchor="center")
+        self.files_tree.column("序号", width=50, anchor="center", minwidth=50)
+        self.files_tree.column("文件路径", width=450, minwidth=100)
+        self.files_tree.column("工作表名称", width=150, anchor="center", minwidth=100)
         
         self.files_tree.heading("序号", text="序号")
         self.files_tree.heading("文件路径", text="文件路径")
         self.files_tree.heading("工作表名称", text="工作表名称")
         
-        # 添加滚动条
-        scrollbar = ttk.Scrollbar(self.files_listbox_frame, orient="vertical", command=self.files_tree.yview)
-        self.files_tree.configure(yscrollcommand=scrollbar.set)
-        
         self.files_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
-        # 文件操作按钮区域
+        # 文件操作按钮区域 - 使用流式布局
         files_buttons_frame = ttk.Frame(files_frame)
         files_buttons_frame.pack(fill=tk.X, expand=False, pady=5)
         
+        # 为按钮创建一个水平滚动的容器
+        button_canvas = tk.Canvas(files_buttons_frame, height=40)
+        button_canvas.pack(fill=tk.X, expand=True)
+        
+        # 在Canvas中创建一个Frame来放置按钮
+        button_frame = ttk.Frame(button_canvas)
+        button_frame_window = button_canvas.create_window((0,0), window=button_frame, anchor="nw")
+        
         # 添加文件按钮
-        add_file_button = ttk.Button(files_buttons_frame, text="添加文件", command=self.add_a_file)
+        add_file_button = ttk.Button(button_frame, text="添加文件", command=self.add_a_file)
         add_file_button.pack(side=tk.LEFT, padx=5)
         
         # 删除选中文件按钮
-        remove_file_button = ttk.Button(files_buttons_frame, text="删除选中", command=self.remove_a_file)
+        remove_file_button = ttk.Button(button_frame, text="删除选中", command=self.remove_a_file)
         remove_file_button.pack(side=tk.LEFT, padx=5)
         
         # 清空所有文件按钮
-        clear_files_button = ttk.Button(files_buttons_frame, text="清空列表", command=self.clear_a_files)
+        clear_files_button = ttk.Button(button_frame, text="清空列表", command=self.clear_a_files)
         clear_files_button.pack(side=tk.LEFT, padx=5)
         
         # 设置工作表名按钮
-        set_sheet_button = ttk.Button(files_buttons_frame, text="设置工作表名", command=self.set_sheet_name)
+        set_sheet_button = ttk.Button(button_frame, text="设置工作表名", command=self.set_sheet_name)
         set_sheet_button.pack(side=tk.LEFT, padx=5)
         
-        # 通用工作表名称区域
+        # 更新button_frame的大小
+        button_frame.update_idletasks()
+        button_canvas.config(scrollregion=button_canvas.bbox("all"))
+        
+        # 如果按钮太多导致溢出，添加水平滚动条
+        if button_frame.winfo_reqwidth() > button_canvas.winfo_width():
+            button_hsb = ttk.Scrollbar(files_buttons_frame, orient="horizontal", command=button_canvas.xview)
+            button_hsb.pack(fill=tk.X)
+            button_canvas.config(xscrollcommand=button_hsb.set)
+        
+        # 添加Canvas大小调整事件
+        button_canvas.bind("<Configure>", lambda e: button_canvas.itemconfig(
+            button_frame_window, width=e.width))
+        
+        # 通用工作表名称区域 - 使用流式布局
         common_sheet_frame = ttk.Frame(parent)
         common_sheet_frame.pack(fill=tk.X, pady=10)
         
-        ttk.Label(common_sheet_frame, text="通用工作表名称:", style="TLabel").pack(side=tk.LEFT)
+        # 创建一个容器
+        sheet_wrapper = ttk.Frame(common_sheet_frame)
+        sheet_wrapper.pack(fill=tk.X)
         
-        common_sheet_entry = ttk.Entry(common_sheet_frame, textvariable=self.a_common_sheet, width=20)
+        ttk.Label(sheet_wrapper, text="通用工作表名称:", style="TLabel").pack(side=tk.LEFT)
+        
+        common_sheet_entry = ttk.Entry(sheet_wrapper, textvariable=self.a_common_sheet, width=20)
         common_sheet_entry.pack(side=tk.LEFT, padx=5)
         
-        apply_common_button = ttk.Button(common_sheet_frame, text="应用到所有文件", command=self.apply_common_sheet)
+        apply_common_button = ttk.Button(sheet_wrapper, text="应用到所有文件", command=self.apply_common_sheet)
         apply_common_button.pack(side=tk.LEFT, padx=5)
         
-        ttk.Label(common_sheet_frame, text="(留空使用各文件的默认活动表)", style="TLabel").pack(side=tk.LEFT)
+        ttk.Label(sheet_wrapper, text="(留空使用各文件的默认活动表)", style="TLabel").pack(side=tk.LEFT)
         
         # A表列选择
         col_frame = ttk.Frame(parent, style="TFrame")
@@ -270,18 +361,24 @@ class ExcelProcessorUI:
         ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
     
     def setup_b_tab(self, parent):
-        # B表文件路径
+        # B表文件路径 - 使用可伸缩布局，确保按钮始终可见
         path_frame = ttk.Frame(parent, style="TFrame")
         path_frame.pack(fill=tk.X, pady=(10, 5))
         
         ttk.Label(path_frame, text="B表文件路径:", style="TLabel").pack(side=tk.LEFT)
         
-        self.b_file_path = tk.StringVar()
-        path_entry = ttk.Entry(path_frame, textvariable=self.b_file_path, width=60)
-        path_entry.pack(side=tk.LEFT, padx=5)
+        # 创建一个框架来包含输入框和按钮
+        entry_button_frame = ttk.Frame(path_frame)
+        entry_button_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
         
-        browse_button = ttk.Button(path_frame, text="浏览...", command=self.browse_b_file)
-        browse_button.pack(side=tk.LEFT)
+        self.b_file_path = tk.StringVar()
+        # 设置Entry的宽度比例
+        path_entry = ttk.Entry(entry_button_frame, textvariable=self.b_file_path)
+        path_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+        
+        # 确保按钮始终可见
+        browse_button = ttk.Button(entry_button_frame, text="浏览...", command=self.browse_b_file)
+        browse_button.pack(side=tk.RIGHT)
         
         # B表工作表名称
         sheet_frame = ttk.Frame(parent, style="TFrame")
@@ -317,18 +414,24 @@ class ExcelProcessorUI:
         ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
     
     def setup_output_tab(self, parent):
-        # 输出文件夹路径
+        # 输出文件夹路径 - 使用可伸缩布局
         path_frame = ttk.Frame(parent, style="TFrame")
         path_frame.pack(fill=tk.X, pady=(10, 5))
         
         ttk.Label(path_frame, text="输出文件夹:", style="TLabel").pack(side=tk.LEFT)
         
-        self.output_folder_path = tk.StringVar()
-        path_entry = ttk.Entry(path_frame, textvariable=self.output_folder_path, width=60)
-        path_entry.pack(side=tk.LEFT, padx=5)
+        # 创建一个框架来包含输入框和按钮
+        entry_button_frame = ttk.Frame(path_frame)
+        entry_button_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
         
-        browse_button = ttk.Button(path_frame, text="浏览...", command=self.browse_output_folder)
-        browse_button.pack(side=tk.LEFT)
+        self.output_folder_path = tk.StringVar()
+        # 设置Entry的宽度比例
+        path_entry = ttk.Entry(entry_button_frame, textvariable=self.output_folder_path)
+        path_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+        
+        # 确保按钮始终可见
+        browse_button = ttk.Button(entry_button_frame, text="浏览...", command=self.browse_output_folder)
+        browse_button.pack(side=tk.RIGHT)
         
         # 输出文件名
         file_frame = ttk.Frame(parent, style="TFrame")
@@ -592,9 +695,37 @@ class ExcelProcessorUI:
             self.root.after(0, lambda: messagebox.showerror("错误", error_message))
 
 def main():
+    # 处理高DPI显示的问题
+    try:
+        from ctypes import windll
+        windll.shcore.SetProcessDpiAwareness(1)
+    except:
+        pass  # 非Windows平台或者无法设置DPI感知
+    
     root = tk.Tk()
+    
+    # 检测平台，为Mac调整字体和界面元素
+    if platform.system() == "Darwin":  # macOS
+        # 在Mac上应用默认字体
+        default_font = tk.font.nametofont("TkDefaultFont")
+        default_font.configure(size=12)
+        root.option_add("*Font", default_font)
+    
+    # 设置应用图标
+    try:
+        if platform.system() == "Windows":
+            icon_path = resource_path("excel_icon.ico")
+            if os.path.exists(icon_path):
+                root.iconbitmap(icon_path)
+        elif platform.system() == "Darwin":  # macOS
+            # Mac使用不同的图标设置方式，需要使用.icns文件
+            # 这里我们先跳过，通常需要在Mac上专门创建.icns文件
+            pass
+    except Exception as e:
+        print(f"设置图标时出错: {e}")
+    
     app = ExcelProcessorUI(root)
     root.mainloop()
 
 if __name__ == "__main__":
-    main() 
+    main()
