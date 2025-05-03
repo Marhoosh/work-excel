@@ -85,6 +85,15 @@ def process_excel_file(file_a_path, file_b_path, output_path, col_x, col_y, shee
             for row_idx in range(min_row, max_row + 1):
                 merged_cells_map[row_idx] = cell_value
     
+    # 查找表头中包含"日期"的列
+    date_columns = set()
+    if ws_a.max_row > 0:
+        header_row = ws_a[2]
+        for col_idx, cell in enumerate(header_row, 1):
+            header_text = str(cell.value).lower() if cell.value else ""
+            if "日期" in header_text or "时间" in header_text or "date" in header_text.lower() or "time" in header_text.lower():
+                date_columns.add(col_idx)
+    
     # 找到匹配的行
     matching_rows = []
     matching_row_indices = []  # 存储原始行索引，用于后续复制合并单元格
@@ -137,7 +146,7 @@ def process_excel_file(file_a_path, file_b_path, output_path, col_x, col_y, shee
         # 将表头添加到结果第一行
         for j, (value, cell_format, orig_cell) in enumerate(zip(header_row, header_formats, header_objects)):
             result_cell = ws_result.cell(row=1, column=j+1, value=value)
-            copy_cell_format_and_style(orig_cell, result_cell)
+            copy_cell_format_and_style(orig_cell, result_cell, False)  # 表头不处理为日期格式
     
     # 复制匹配的数据到结果表
     start_row = 2  # 从第二行开始写入数据（第一行是表头）
@@ -153,8 +162,11 @@ def process_excel_file(file_a_path, file_b_path, output_path, col_x, col_y, shee
             col_idx = j + 1
             result_cell = ws_result.cell(row=target_row, column=col_idx)
             
+            # 判断是否为日期列
+            is_date_column = col_idx in date_columns
+            
             # 使用增强的复制函数，处理所有格式和样式
-            copy_cell_format_and_style(orig_cell, result_cell)
+            copy_cell_format_and_style(orig_cell, result_cell, is_date_column)
             
             # 检查该单元格在A表中是否是合并单元格的一部分
             original_cell_key = (original_row_idx, col_idx)
@@ -213,10 +225,26 @@ def process_excel_file(file_a_path, file_b_path, output_path, col_x, col_y, shee
         except:
             return 0, None
 
-def copy_cell_format_and_style(source_cell, target_cell):
+def copy_cell_format_and_style(source_cell, target_cell, is_date_column=False):
     """复制单元格的格式和样式"""
     # 复制值
     value = source_cell.value
+    
+    # 如果该列被标记为日期列，尝试将值转换为日期格式
+    if is_date_column and isinstance(value, (int, float)) and value > 40000:
+        try:
+            # Excel中的日期是从1900-01-01开始的天数（有些特殊情况）
+            date_value = datetime.datetime(1899, 12, 30) + datetime.timedelta(days=value)
+            value = date_value
+            # 设置中文日期格式
+            target_cell.value = value
+            target_cell.number_format = 'm"月"d"日"'
+            return
+        except:
+            # 如果转换失败，按普通值处理
+            pass
+    
+    # 非日期列或转换失败，使用原始处理方式
     
     # 检查是否是日期类型
     cell_format = source_cell.number_format
@@ -373,6 +401,15 @@ def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sh
                 for row_idx in range(min_row, max_row + 1):
                     merged_cells_map[row_idx] = cell_value
         
+        # 查找表头中包含"日期"的列
+        date_columns = set()
+        if ws_a.max_row > 0:
+            header_row = ws_a[1]
+            for col_idx, cell in enumerate(header_row, 1):
+                header_text = str(cell.value).lower() if cell.value else ""
+                if "日期" in header_text or "时间" in header_text or "date" in header_text.lower() or "time" in header_text.lower():
+                    date_columns.add(col_idx)
+        
         # 找到匹配的行
         matching_rows = []
         matching_row_indices = []  # 存储原始行索引，用于后续复制合并单元格
@@ -424,8 +461,8 @@ def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sh
             
             # 将表头添加到结果第一行
             for j, (value, cell_format, orig_cell) in enumerate(zip(header_row, header_formats, header_objects)):
-                result_cell = ws_result.cell(row=1, column=j+1)
-                copy_cell_format_and_style(orig_cell, result_cell)
+                result_cell = ws_result.cell(row=1, column=j+1, value=value)
+                copy_cell_format_and_style(orig_cell, result_cell, False)  # 表头不处理为日期格式
             
             header_added = True
             start_row = 2
@@ -445,8 +482,11 @@ def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sh
                 col_idx = j + 1
                 result_cell = ws_result.cell(row=target_row, column=col_idx)
                 
+                # 判断是否为日期列
+                is_date_column = col_idx in date_columns
+                
                 # 使用增强的复制函数，处理所有格式和样式
-                copy_cell_format_and_style(orig_cell, result_cell)
+                copy_cell_format_and_style(orig_cell, result_cell, is_date_column)
                 
                 # 检查该单元格在A表中是否是合并单元格的一部分
                 original_cell_key = (original_row_idx, col_idx)

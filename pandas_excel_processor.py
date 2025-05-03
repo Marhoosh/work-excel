@@ -407,8 +407,9 @@ def main():
         print("未找到匹配的数据或保存文件失败")
 
 if __name__ == "__main__":
-    # 命令行运行时使用交互式界面
-    if os.isatty(0):  # 检查是否是交互式终端
-        pandas_excel_ui()
-    else:  # 否则使用默认测试数据
-        main() 
+    # # 命令行运行时使用交互式界面
+    # if os.isatty(0):  # 检查是否是交互式终端
+    #     pandas_excel_ui()
+    # else:  # 否则使用默认测试数据
+    #     main() 
+    main()
