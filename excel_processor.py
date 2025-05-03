@@ -174,20 +174,43 @@ def process_excel_file(file_a_path, file_b_path, output_path, col_x, col_y, shee
                 # 获取原始合并范围
                 o_min_row, o_min_col, o_max_row, o_max_col = merged_ranges[original_cell_key]
                 
-                # 计算在目标工作表中的偏移量
-                # 这里的偏移量需要考虑表头行
-                row_offset = start_row - 2  # 注意：表头占一行，所以再减1
+                # 创建原始行到结果表行的映射
+                orig_to_result_row_map = {}
+                
+                # 记录当前行映射到结果表的位置
+                orig_to_result_row_map[original_row_idx] = target_row
                 
                 # 计算新的合并范围
                 # 对于表头之前的行不进行合并操作
                 if o_min_row > 1:  # 跳过第一行（表头）
-                    new_min_row = o_min_row + row_offset
-                    new_max_row = o_max_row + row_offset
+                    # 检查是否所有需要合并的行都找到了匹配
+                    merge_rows_matched = True
                     
-                    # 每个单元格只需计算一次其所属的合并范围
-                    merge_key = (o_min_row, o_min_col, o_max_row, o_max_col)
-                    if merge_key not in cells_to_merge:
-                        cells_to_merge[merge_key] = (new_min_row, o_min_col, new_max_row, o_max_col)
+                    # 查找原始表中所有需要合并的行是否都在匹配行中
+                    rows_to_merge = set(range(o_min_row, o_max_row + 1))
+                    matched_merge_rows = set(matching_row_indices) & rows_to_merge
+                    
+                    if len(matched_merge_rows) == len(rows_to_merge):
+                        # 所有合并行都匹配上了，计算结果表中的合并范围
+                        
+                        # 找出合并范围内每一行在结果表中的位置
+                        for row_index, matching_idx in enumerate(matching_row_indices):
+                            if o_min_row <= matching_idx <= o_max_row:
+                                orig_to_result_row_map[matching_idx] = start_row + row_index
+                        
+                        # 获取合并范围内最小和最大行在结果表中的位置
+                        result_rows = [orig_to_result_row_map[matching_idx] for matching_idx in matched_merge_rows]
+                        new_min_row = min(result_rows)
+                        new_max_row = max(result_rows)
+                        
+                        # 存储合并信息，使用列索引相同但行索引映射后的值
+                        merge_key = (o_min_row, o_min_col, o_max_row, o_max_col)
+                        if merge_key not in cells_to_merge:
+                            cells_to_merge[merge_key] = (new_min_row, o_min_col, new_max_row, o_max_col)
+                            print(f"将合并单元格: 原始范围=({o_min_row},{o_min_col})-({o_max_row},{o_max_col}) -> 结果表范围=({new_min_row},{o_min_col})-({new_max_row},{o_max_col})")
+                    else:
+                        # 不是所有合并行都匹配上了，跳过此合并
+                        print(f"跳过合并单元格: 原始范围=({o_min_row},{o_min_col})-({o_max_row},{o_max_col})，因为不是所有行都匹配")
     
     # 在结果表中合并单元格
     for _, (min_row, min_col, max_row, max_col) in cells_to_merge.items():
@@ -359,7 +382,7 @@ def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sh
     start_row = 1
     
     # 处理每个A表文件
-    for idx, file_a_path in enumerate(file_a_paths):
+    for file_index, file_a_path in enumerate(file_a_paths):
         # 获取该文件的工作表名
         current_sheet_a = sheet_a_map.get(file_a_path, sheet_a)
         
@@ -496,25 +519,43 @@ def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sh
                     # 获取原始合并范围
                     o_min_row, o_min_col, o_max_row, o_max_col = merged_ranges[original_cell_key]
                     
-                    # 只处理不包括表头的合并单元格
-                    if o_min_row > 1 or (o_min_row == 1 and not header_added):
-                        # 计算新的合并范围
-                        rows_in_current_range = o_max_row - o_min_row
+                    # 创建原始行到结果表行的映射
+                    orig_to_result_row_map = {}
+                    
+                    # 记录当前行映射到结果表的位置
+                    orig_to_result_row_map[original_row_idx] = target_row
+                    
+                    # 计算新的合并范围
+                    # 对于表头之前的行不进行合并操作
+                    if o_min_row > 1:  # 跳过第一行（表头）
+                        # 检查是否所有需要合并的行都找到了匹配
+                        merge_rows_matched = True
                         
-                        # 调整行索引，考虑表头和之前文件匹配的行数
-                        if o_min_row == 1 and not header_added:
-                            # 第一个文件的表头行
-                            new_min_row = start_row
+                        # 查找原始表中所有需要合并的行是否都在匹配行中
+                        rows_to_merge = set(range(o_min_row, o_max_row + 1))
+                        matched_merge_rows = set(matching_row_indices) & rows_to_merge
+                        
+                        if len(matched_merge_rows) == len(rows_to_merge):
+                            # 所有合并行都匹配上了，计算结果表中的合并范围
+                            
+                            # 找出合并范围内每一行在结果表中的位置
+                            for row_index, matching_idx in enumerate(matching_row_indices):
+                                if o_min_row <= matching_idx <= o_max_row:
+                                    orig_to_result_row_map[matching_idx] = start_row + row_index
+                        
+                            # 获取合并范围内最小和最大行在结果表中的位置
+                            result_rows = [orig_to_result_row_map[matching_idx] for matching_idx in matched_merge_rows]
+                            new_min_row = min(result_rows)
+                            new_max_row = max(result_rows)
+                            
+                            # 存储合并信息，使用列索引相同但行索引映射后的值
+                            merge_key = (o_min_row, o_min_col, o_max_row, o_max_col)
+                            if merge_key not in cells_to_merge:
+                                cells_to_merge[merge_key] = (new_min_row, o_min_col, new_max_row, o_max_col)
+                                print(f"将合并单元格: 原始范围=({o_min_row},{o_min_col})-({o_max_row},{o_max_col}) -> 结果表范围=({new_min_row},{o_min_col})-({new_max_row},{o_max_col})")
                         else:
-                            # 其他行的调整
-                            new_min_row = target_row - (original_row_idx - o_min_row)
-                        
-                        new_max_row = new_min_row + rows_in_current_range
-                        
-                        # 每个单元格只需计算一次其所属的合并范围
-                        merge_key = (o_min_row, o_min_col, o_max_row, o_max_col, idx)  # 添加文件索引以区分不同文件的相同合并单元格
-                        if merge_key not in cells_to_merge:
-                            cells_to_merge[merge_key] = (new_min_row, o_min_col, new_max_row, o_max_col)
+                            # 不是所有合并行都匹配上了，跳过此合并
+                            print(f"跳过合并单元格: 原始范围=({o_min_row},{o_min_col})-({o_max_row},{o_max_col})，因为不是所有行都匹配")
             
             # 只统计非表头行
             if original_row_idx > 1 or not header_added:
