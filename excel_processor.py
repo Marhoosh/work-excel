@@ -231,67 +231,69 @@ def copy_cell_format_and_style(source_cell, target_cell, is_date_column=False):
     value = source_cell.value
     
     # 如果该列被标记为日期列，尝试将值转换为日期格式
-    if is_date_column and isinstance(value, (int, float)) and value > 40000:
-        try:
-            # Excel中的日期是从1900-01-01开始的天数（有些特殊情况）
-            date_value = datetime.datetime(1899, 12, 30) + datetime.timedelta(days=value)
-            value = date_value
-            # 设置中文日期格式
+    if is_date_column:
+        if isinstance(value, (int, float)) and value > 40000:
+            try:
+                # Excel中的日期是从1900-01-01开始的天数（有些特殊情况）
+                date_value = datetime.datetime(1899, 12, 30) + datetime.timedelta(days=value)
+                value = date_value
+                # 设置中文日期格式
+                target_cell.value = value
+                target_cell.number_format = 'm"月"d"日"'
+                return
+            except:
+                # 如果转换失败，按普通值处理
+                pass
+        # 额外检查：如果值是已经格式化的日期对象
+        elif isinstance(value, datetime.datetime):
+            # 直接应用中文日期格式
             target_cell.value = value
             target_cell.number_format = 'm"月"d"日"'
             return
-        except:
-            # 如果转换失败，按普通值处理
-            pass
+        # 处理字符串形式的日期
+        elif isinstance(value, str):
+            try:
+                # 尝试匹配多种日期格式
+                date_patterns = [
+                    r"(\d{4})[/-](\d{1,2})[/-](\d{1,2})",  # YYYY/MM/DD 或 YYYY-MM-DD
+                    r"(\d{1,2})[/-](\d{1,2})[/-](\d{4})",  # DD/MM/YYYY 或 DD-MM-YYYY
+                    r"(\d{1,2})月(\d{1,2})日"               # MM月DD日
+                ]
+                
+                for pattern in date_patterns:
+                    match = re.search(pattern, value)
+                    if match:
+                        if pattern == date_patterns[0]:  # YYYY/MM/DD
+                            year, month, day = int(match.group(1)), int(match.group(2)), int(match.group(3))
+                        elif pattern == date_patterns[1]:  # DD/MM/YYYY
+                            day, month, year = int(match.group(1)), int(match.group(2)), int(match.group(3))
+                        elif pattern == date_patterns[2]:  # MM月DD日
+                            month, day = int(match.group(1)), int(match.group(2))
+                            year = datetime.datetime.now().year  # 使用当前年份
+                        
+                        date_obj = datetime.datetime(year, month, day)
+                        target_cell.value = date_obj
+                        target_cell.number_format = 'm"月"d"日"'
+                        return
+            except:
+                # 如果解析失败，保持原始值
+                pass
     
     # 非日期列或转换失败，使用原始处理方式
     
-    # 检查是否是日期类型
+    # 检查是否有日期格式标记
     cell_format = source_cell.number_format
     is_date_format = ("y" in cell_format.lower() or "m" in cell_format.lower() or "d" in cell_format.lower())
     
-    # 处理特殊的日期格式
-    if isinstance(value, str) and is_date_format:
-        # 尝试解析字符串日期格式 (例如 "2025/5/1")
-        try:
-            # 尝试匹配多种日期格式
-            date_patterns = [
-                r"(\d{4})[/-](\d{1,2})[/-](\d{1,2})",  # YYYY/MM/DD 或 YYYY-MM-DD
-                r"(\d{1,2})[/-](\d{1,2})[/-](\d{4})",  # DD/MM/YYYY 或 DD-MM-YYYY
-                r"(\d{1,2})月(\d{1,2})日"               # MM月DD日
-            ]
-            
-            for pattern in date_patterns:
-                match = re.search(pattern, value)
-                if match:
-                    if pattern == date_patterns[0]:  # YYYY/MM/DD
-                        year, month, day = int(match.group(1)), int(match.group(2)), int(match.group(3))
-                    elif pattern == date_patterns[1]:  # DD/MM/YYYY
-                        day, month, year = int(match.group(1)), int(match.group(2)), int(match.group(3))
-                    elif pattern == date_patterns[2]:  # MM月DD日
-                        month, day = int(match.group(1)), int(match.group(2))
-                        year = datetime.datetime.now().year  # 使用当前年份
-                    
-                    date_obj = datetime.datetime(year, month, day)
-                    value = date_obj
-                    break
-        except:
-            # 如果解析失败，保持原始值
-            pass
-    elif isinstance(value, (int, float)) and is_date_format:
-        # 处理数字形式的日期
-        try:
-            # Excel中的日期是从1900-01-01开始的天数（有些特殊情况）
-            date_value = datetime.datetime(1899, 12, 30) + datetime.timedelta(days=value)
-            value = date_value
-        except:
-            pass
-    
-    # 设置值
-    target_cell.value = value
-    
-    # 只复制格式，不复制样式对象
-    target_cell.number_format = source_cell.number_format
+    # 如果单元格有日期格式但不在日期列中，尝试保留其原始格式
+    if is_date_format and isinstance(value, (datetime.datetime, int, float)):
+        # 设置值和格式
+        target_cell.value = value
+        target_cell.number_format = cell_format
+    else:
+        # 普通值，直接复制
+        target_cell.value = value
+        target_cell.number_format = cell_format
 
 def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sheet_a=None, sheet_b=None, output_sheet=None, sheet_a_map=None):
     """
@@ -404,7 +406,7 @@ def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sh
         # 查找表头中包含"日期"的列
         date_columns = set()
         if ws_a.max_row > 0:
-            header_row = ws_a[1]
+            header_row = ws_a[2]
             for col_idx, cell in enumerate(header_row, 1):
                 header_text = str(cell.value).lower() if cell.value else ""
                 if "日期" in header_text or "时间" in header_text or "date" in header_text.lower() or "time" in header_text.lower():

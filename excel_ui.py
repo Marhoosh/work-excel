@@ -226,7 +226,8 @@ class ExcelProcessorUI:
 - 文件列表：可以添加多个Excel文件进行批量处理
 - 工作表名称：可以为每个文件单独设置工作表名称，也可以使用通用工作表名应用到所有文件
 - 比较列：用于与B表比较的列，可以是字母(A,B,C)或数字(1,2,3)
-- 对于含有多个工作表的Excel文件，可以单独指定要处理的工作表"""
+- 对于含有多个工作表的Excel文件，可以单独指定要处理的工作表
+- 系统会自动检测表头中包含"日期"的列，并将其格式化为中文日期格式"""
         
         ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
     
@@ -328,7 +329,8 @@ class ExcelProcessorUI:
 2. 程序会自动将A表中的第一行作为表头复制到结果文件
 3. 如果A表中包含公式，只会保存计算结果，不保存公式本身
 4. 程序会自动识别并保持原A表中的合并单元格状态
-5. 当处理多个A表文件时，所有匹配的行将合并到一个结果文件中"""
+5. 当处理多个A表文件时，所有匹配的行将合并到一个结果文件中
+6. 系统会自动检测表头中包含"日期"或"时间"的列，并将其格式化为中文日期格式(如"5月1日")"""
         
         ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
     
