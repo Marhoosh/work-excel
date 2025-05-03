@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox, simpledialog
+from tkinter import ttk, filedialog, messagebox, simpledialog, font as tkfont
 import os
 import threading
 import sys
@@ -706,10 +706,15 @@ def main():
     
     # 检测平台，为Mac调整字体和界面元素
     if platform.system() == "Darwin":  # macOS
-        # 在Mac上应用默认字体
-        default_font = tk.font.nametofont("TkDefaultFont")
-        default_font.configure(size=12)
-        root.option_add("*Font", default_font)
+        try:
+            # 在Mac上应用默认字体
+            default_font = tkfont.nametofont("TkDefaultFont")
+            default_font.configure(size=12)
+            root.option_add("*Font", default_font)
+        except Exception as e:
+            print(f"设置Mac字体时出错: {e}")
+            # 备用方式：直接设置常用字体
+            root.option_add("*Font", ("SF Pro", 12))
     
     # 设置应用图标
     try:
