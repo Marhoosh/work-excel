@@ -149,11 +149,11 @@ class ExcelProcessorUI:
         
         # A表选项卡
         a_tab = ttk.Frame(tab_control, style="TFrame")
-        tab_control.add(a_tab, text="A表 (源数据)")
+        tab_control.add(a_tab, text="日报表")
         
         # B表选项卡
         b_tab = ttk.Frame(tab_control, style="TFrame")
-        tab_control.add(b_tab, text="B表 (对比数据)")
+        tab_control.add(b_tab, text="患者库")
         
         # 输出选项卡
         output_tab = ttk.Frame(tab_control, style="TFrame")
@@ -238,7 +238,7 @@ class ExcelProcessorUI:
     
     def setup_a_tab(self, parent):
         # A表文件列表框架
-        files_frame = ttk.LabelFrame(parent, text="A表文件列表", padding="10 10 10 10")
+        files_frame = ttk.LabelFrame(parent, text="日报表文件列表", padding="10 10 10 10")
         files_frame.pack(fill=tk.BOTH, expand=True, pady=5)
         
         # 文件列表显示区域
@@ -351,10 +351,10 @@ class ExcelProcessorUI:
         info_frame = ttk.LabelFrame(parent, text="说明", style="TFrame")
         info_frame.pack(fill=tk.BOTH, expand=False, pady=10)
         
-        info_text = """A表是源数据表，程序将查找此表中指定列与B表匹配的行。
+        info_text = """日报表是源数据表，程序将查找此表中指定列与患者库匹配的行。
 - 文件列表：可以添加多个Excel文件进行批量处理
 - 工作表名称：可以为每个文件单独设置工作表名称，也可以使用通用工作表名应用到所有文件
-- 比较列：用于与B表比较的列，可以是字母(A,B,C)或数字(1,2,3)
+- 比较列：用于与患者库比较的列，可以是字母(A,B,C)或数字(1,2,3)
 - 对于含有多个工作表的Excel文件，可以单独指定要处理的工作表
 - 系统会自动检测表头中包含"日期"的列，并将其格式化为中文日期格式"""
         
@@ -365,7 +365,7 @@ class ExcelProcessorUI:
         path_frame = ttk.Frame(parent, style="TFrame")
         path_frame.pack(fill=tk.X, pady=(10, 5))
         
-        ttk.Label(path_frame, text="B表文件路径:", style="TLabel").pack(side=tk.LEFT)
+        ttk.Label(path_frame, text="患者库文件路径:", style="TLabel").pack(side=tk.LEFT)
         
         # 创建一个框架来包含输入框和按钮
         entry_button_frame = ttk.Frame(path_frame)
@@ -406,10 +406,10 @@ class ExcelProcessorUI:
         info_frame = ttk.LabelFrame(parent, text="说明", style="TFrame")
         info_frame.pack(fill=tk.BOTH, expand=True, pady=10)
         
-        info_text = """B表是对比数据表，程序将查找A表中与此表指定列匹配的行。
+        info_text = """患者库是对比数据表，程序将查找日报表中与此表指定列匹配的行。
 - 文件路径：Excel文件的完整路径
 - 工作表名称：要处理的工作表名称，留空将使用默认活动表
-- 比较列：用于与A表比较的列，可以是字母(A,B,C)或数字(1,2,3)"""
+- 比较列：用于与日报表比较的列，可以是字母(A,B,C)或数字(1,2,3)"""
         
         ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
     
@@ -467,18 +467,18 @@ class ExcelProcessorUI:
         
 注意：
 1. 实际保存的文件名会自动添加时间戳，以避免覆盖现有文件
-2. 程序会自动将A表中的第一行作为表头复制到结果文件
-3. 如果A表中包含公式，只会保存计算结果，不保存公式本身
-4. 程序会自动识别并保持原A表中的合并单元格状态
-5. 当处理多个A表文件时，所有匹配的行将合并到一个结果文件中
+2. 程序会自动将日报表中的第一行作为表头复制到结果文件
+3. 如果日报表中包含公式，只会保存计算结果，不保存公式本身
+4. 程序会自动识别并保持原日报表中的合并单元格状态
+5. 当处理多个日报表文件时，所有匹配的行将合并到一个结果文件中
 6. 系统会自动检测表头中包含"日期"或"时间"的列，并将其格式化为中文日期格式(如"5月1日")"""
         
         ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
     
     def add_a_file(self):
-        """添加A表文件到列表"""
+        """添加日报表文件到列表"""
         filenames = filedialog.askopenfilenames(
-            title="选择一个或多个A表文件",
+            title="选择一个或多个日报表文件",
             filetypes=[("Excel文件", "*.xlsx *.xls"), ("所有文件", "*.*")]
         )
         
@@ -497,7 +497,7 @@ class ExcelProcessorUI:
             self.update_a_files_treeview()
     
     def remove_a_file(self):
-        """删除选中的A表文件"""
+        """删除选中的日报表文件"""
         selected_items = self.files_tree.selection()
         if not selected_items:
             messagebox.showinfo("提示", "请先选择要删除的文件")
@@ -569,7 +569,7 @@ class ExcelProcessorUI:
     
     def browse_b_file(self):
         filename = filedialog.askopenfilename(
-            title="选择B表文件",
+            title="选择患者库文件",
             filetypes=[("Excel文件", "*.xlsx *.xls"), ("所有文件", "*.*")]
         )
         if filename:
@@ -615,20 +615,20 @@ class ExcelProcessorUI:
         
         # 参数验证
         if not a_files:
-            messagebox.showerror("错误", "请添加至少一个A表文件")
+            messagebox.showerror("错误", "请添加至少一个日报表文件")
             return
         
         # 检查所有A表文件是否存在
         for file_path, _ in a_files:
             if not os.path.exists(file_path):
-                messagebox.showerror("错误", f"A表文件不存在: {file_path}")
+                messagebox.showerror("错误", f"日报表文件不存在: {file_path}")
                 return
             
         if not b_file:
-            messagebox.showerror("错误", "请选择B表文件")
+            messagebox.showerror("错误", "请选择患者库文件")
             return
         if not os.path.exists(b_file):
-            messagebox.showerror("错误", f"B表文件不存在: {b_file}")
+            messagebox.showerror("错误", f"患者库文件不存在: {b_file}")
             return
             
         if not output_folder:
@@ -646,11 +646,11 @@ class ExcelProcessorUI:
             output_file = output_file + '.xlsx'
             
         if not a_col:
-            messagebox.showerror("错误", "请指定A表的比较列")
+            messagebox.showerror("错误", "请指定日报表的比较列")
             return
             
         if not b_col:
-            messagebox.showerror("错误", "请指定B表的比较列")
+            messagebox.showerror("错误", "请指定患者库的比较列")
             return
         
         # 清空结果
