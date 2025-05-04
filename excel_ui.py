@@ -81,6 +81,42 @@ class ExcelProcessorUI:
             foreground=[("active", "#FFFFFF"), ("pressed", "#FFFFFF")]
         )
         
+        # 自定义Notebook选项卡样式
+        style.configure(
+            "Custom.TNotebook", 
+            background="#f0f0f0", 
+            borderwidth=1,
+            tabmargins=[2, 5, 2, 0]
+        )
+        
+        # 选项卡样式
+        style.configure(
+            "Custom.TNotebook.Tab",
+            font=("微软雅黑", 11),
+            padding=[30, 10],
+            background="#e8e8e8",  # 淡灰色背景
+            foreground="black"     # 黑色文字，确保可见性
+        )
+        
+        # 选中选项卡样式
+        style.map(
+            "Custom.TNotebook.Tab",
+            background=[("selected", "#58b957")],  # 明亮的绿色
+            foreground=[("selected", "#FFFFFF")],  # 纯白色文字
+            font=[("selected", ("微软雅黑", 11, "bold"))]  # 加粗文字增强可见性
+        )
+        
+        # 创建选项卡内容框架的样式
+        style.configure(
+            "TabContent.TFrame",
+            background="#f8f8f8",  # 稍微淡一点的背景色
+            relief="solid",       # 实线边框
+            borderwidth=1         # 细边框
+        )
+        
+        # 定义分隔线样式
+        style.configure("TSeparator", background="#4CAF50")  # 绿色分隔线
+        
         # 用于存储多个A表文件的信息
         self.a_files = []  # 格式: [(文件路径, 工作表名称), ...]
         self.a_common_sheet = tk.StringVar()  # 用于存储通用工作表名称
@@ -144,22 +180,77 @@ class ExcelProcessorUI:
         header = ttk.Label(main_frame, text="Excel数据处理工具", style="Header.TLabel")
         header.pack(pady=(0, 20))
         
-        # 创建三个选项卡(a表、b表、输出)
-        tab_control = ttk.Notebook(main_frame)
+        # 创建自定义选项卡的框架
+        tab_frames_container = ttk.Frame(main_frame)
+        tab_frames_container.pack(fill=tk.BOTH, expand=True, pady=(0, 20), padx=5)
         
-        # A表选项卡
-        a_tab = ttk.Frame(tab_control, style="TFrame")
-        tab_control.add(a_tab, text="日报表")
+        # 创建选项卡按钮框架
+        tab_buttons_frame = ttk.Frame(tab_frames_container)
+        tab_buttons_frame.pack(fill=tk.X)
         
-        # B表选项卡
-        b_tab = ttk.Frame(tab_control, style="TFrame")
-        tab_control.add(b_tab, text="患者库")
+        # 创建选项卡内容框架
+        content_frame = ttk.Frame(tab_frames_container, style="TabContent.TFrame", borderwidth=1, relief="solid")
+        content_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 5))
         
-        # 输出选项卡
-        output_tab = ttk.Frame(tab_control, style="TFrame")
-        tab_control.add(output_tab, text="输出设置")
+        # 创建A/B/输出设置的框架 - 使用统一的背景色
+        a_tab = ttk.Frame(content_frame, padding="10", style="TabContent.TFrame")
+        b_tab = ttk.Frame(content_frame, padding="10", style="TabContent.TFrame")
+        output_tab = ttk.Frame(content_frame, padding="10", style="TabContent.TFrame")
         
-        tab_control.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
+        # 当前选中的选项卡
+        self.current_tab = tk.StringVar(value="a_tab")  # 默认显示A表
+        
+        # 创建选项卡按钮样式 - 更美观的样式
+        tab_button_style = {
+            "font": ("微软雅黑", 11),
+            "padx": 30,
+            "pady": 10,
+            "bd": 1,
+            "relief": "flat",  # 平面风格更美观
+            "cursor": "hand2",
+            "bg": "#e8e8e8",
+            "fg": "#333333",
+            "activebackground": "#d0d0d0",
+            "activeforeground": "#333333"
+        }
+        
+        # 选项卡按钮点击函数
+        def show_tab(tab_name):
+            # 隐藏所有选项卡
+            a_tab.pack_forget()
+            b_tab.pack_forget()
+            output_tab.pack_forget()
+            
+            # 重置所有按钮样式
+            a_button.config(bg="#e8e8e8", fg="black", font=("微软雅黑", 11))
+            b_button.config(bg="#e8e8e8", fg="black", font=("微软雅黑", 11))
+            output_button.config(bg="#e8e8e8", fg="black", font=("微软雅黑", 11))
+            
+            # 显示选中的选项卡
+            if tab_name == "a_tab":
+                a_tab.pack(fill=tk.BOTH, expand=True)
+                a_button.config(bg="#4CAF50", fg="white", font=("微软雅黑", 11, "bold"))
+            elif tab_name == "b_tab":
+                b_tab.pack(fill=tk.BOTH, expand=True)
+                b_button.config(bg="#4CAF50", fg="white", font=("微软雅黑", 11, "bold"))
+            else:  # output_tab
+                output_tab.pack(fill=tk.BOTH, expand=True)
+                output_button.config(bg="#4CAF50", fg="white", font=("微软雅黑", 11, "bold"))
+            
+            self.current_tab.set(tab_name)
+        
+        # 创建选项卡按钮
+        a_button = tk.Button(tab_buttons_frame, text="日报表", command=lambda: show_tab("a_tab"), **tab_button_style)
+        a_button.pack(side=tk.LEFT)
+        
+        b_button = tk.Button(tab_buttons_frame, text="患者库", command=lambda: show_tab("b_tab"), **tab_button_style)
+        b_button.pack(side=tk.LEFT)
+        
+        output_button = tk.Button(tab_buttons_frame, text="输出设置", command=lambda: show_tab("output_tab"), **tab_button_style)
+        output_button.pack(side=tk.LEFT)
+        
+        # 默认显示A表选项卡
+        show_tab("a_tab")
         
         # A表设置
         self.setup_a_tab(a_tab)
@@ -169,6 +260,10 @@ class ExcelProcessorUI:
         
         # 输出设置
         self.setup_output_tab(output_tab)
+        
+        # 添加分隔线，增强视觉效果
+        separator = ttk.Separator(main_frame, orient="horizontal", style="TSeparator")
+        separator.pack(fill=tk.X, pady=(0, 10))
         
         # 创建大型处理按钮框架
         process_frame = ttk.Frame(main_frame, style="TFrame")
