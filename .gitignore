@@ -1,0 +1,18 @@
+# 忽略所有Excel文件
+*.xlsx
+*.xls
+
+# 忽略Excel临时文件
+~$*.xlsx
+~$*.xls
+
+# Python相关
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+
+# 构建和分发
+dist/
+build/
+*.egg-info/ 
