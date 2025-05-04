@@ -490,7 +490,7 @@ class ExcelProcessorUI:
         )
         apply_common_button.pack(side=tk.LEFT, padx=5)
         
-        ttk.Label(sheet_wrapper, text="(留空使用各文件的默认活动表)", style="TLabel").pack(side=tk.LEFT)
+        ttk.Label(sheet_wrapper, style="TLabel").pack(side=tk.LEFT)
         
         # A表列选择
         col_frame = ttk.Frame(parent, style="TFrame")
