@@ -290,19 +290,67 @@ class ExcelProcessorUI:
         button_frame_window = button_canvas.create_window((0,0), window=button_frame, anchor="nw")
         
         # 添加文件按钮
-        add_file_button = ttk.Button(button_frame, text="添加文件", command=self.add_a_file)
+        add_file_button = tk.Button(
+            button_frame, 
+            text="添加文件", 
+            command=self.add_a_file,
+            font=("微软雅黑", 10),
+            bg="#4CAF50",  # 绿色背景
+            fg="white",    # 白色文字
+            activebackground="#45a049",  # 鼠标悬停时的颜色
+            activeforeground="white",
+            relief=tk.RAISED,
+            bd=1,
+            cursor="hand2"  # 手型光标
+        )
         add_file_button.pack(side=tk.LEFT, padx=5)
         
         # 删除选中文件按钮
-        remove_file_button = ttk.Button(button_frame, text="删除选中", command=self.remove_a_file)
+        remove_file_button = tk.Button(
+            button_frame, 
+            text="删除选中", 
+            command=self.remove_a_file,
+            font=("微软雅黑", 10),
+            bg="#4CAF50",
+            fg="white",
+            activebackground="#45a049",
+            activeforeground="white",
+            relief=tk.RAISED,
+            bd=1,
+            cursor="hand2"
+        )
         remove_file_button.pack(side=tk.LEFT, padx=5)
         
         # 清空所有文件按钮
-        clear_files_button = ttk.Button(button_frame, text="清空列表", command=self.clear_a_files)
+        clear_files_button = tk.Button(
+            button_frame, 
+            text="清空列表", 
+            command=self.clear_a_files,
+            font=("微软雅黑", 10),
+            bg="#4CAF50",
+            fg="white",
+            activebackground="#45a049",
+            activeforeground="white",
+            relief=tk.RAISED,
+            bd=1,
+            cursor="hand2"
+        )
         clear_files_button.pack(side=tk.LEFT, padx=5)
         
         # 设置工作表名按钮
-        set_sheet_button = ttk.Button(button_frame, text="设置工作表名", command=self.set_sheet_name)
+        set_sheet_button = tk.Button(
+            button_frame, 
+            text="设置工作表名", 
+            command=self.set_sheet_name,
+            font=("微软雅黑", 10),
+            bg="#4CAF50",
+            fg="white",
+            activebackground="#45a049",
+            activeforeground="white",
+            relief=tk.RAISED,
+            bd=1,
+            cursor="hand2"
+        )
         set_sheet_button.pack(side=tk.LEFT, padx=5)
         
         # 更新button_frame的大小
@@ -332,7 +380,19 @@ class ExcelProcessorUI:
         common_sheet_entry = ttk.Entry(sheet_wrapper, textvariable=self.a_common_sheet, width=20)
         common_sheet_entry.pack(side=tk.LEFT, padx=5)
         
-        apply_common_button = ttk.Button(sheet_wrapper, text="应用到所有文件", command=self.apply_common_sheet)
+        apply_common_button = tk.Button(
+            sheet_wrapper, 
+            text="应用到所有文件", 
+            command=self.apply_common_sheet,
+            font=("微软雅黑", 10),
+            bg="#4CAF50",
+            fg="white",
+            activebackground="#45a049",
+            activeforeground="white",
+            relief=tk.RAISED,
+            bd=1,
+            cursor="hand2"
+        )
         apply_common_button.pack(side=tk.LEFT, padx=5)
         
         ttk.Label(sheet_wrapper, text="(留空使用各文件的默认活动表)", style="TLabel").pack(side=tk.LEFT)
@@ -377,7 +437,19 @@ class ExcelProcessorUI:
         path_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
         
         # 确保按钮始终可见
-        browse_button = ttk.Button(entry_button_frame, text="浏览...", command=self.browse_b_file)
+        browse_button = tk.Button(
+            entry_button_frame, 
+            text="浏览...", 
+            command=self.browse_b_file,
+            font=("微软雅黑", 10),
+            bg="#4CAF50",
+            fg="white",
+            activebackground="#45a049",
+            activeforeground="white",
+            relief=tk.RAISED,
+            bd=1,
+            cursor="hand2"
+        )
         browse_button.pack(side=tk.RIGHT)
         
         # B表工作表名称
@@ -430,7 +502,19 @@ class ExcelProcessorUI:
         path_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
         
         # 确保按钮始终可见
-        browse_button = ttk.Button(entry_button_frame, text="浏览...", command=self.browse_output_folder)
+        browse_button = tk.Button(
+            entry_button_frame, 
+            text="浏览...", 
+            command=self.browse_output_folder,
+            font=("微软雅黑", 10),
+            bg="#4CAF50",
+            fg="white",
+            activebackground="#45a049",
+            activeforeground="white",
+            relief=tk.RAISED,
+            bd=1,
+            cursor="hand2"
+        )
         browse_button.pack(side=tk.RIGHT)
         
         # 输出文件名
