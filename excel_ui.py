@@ -51,11 +51,11 @@ class ExcelProcessorUI:
         # 设置适应不同平台的窗口大小
         system = platform.system()
         if system == "Darwin":  # macOS
-            self.root.geometry("850x650")
-            self.root.minsize(820, 600)
+            self.root.geometry("850x850")  # 增加高度
+            self.root.minsize(820, 800)    # 增加最小高度
         else:
-            self.root.geometry("800x650")
-            self.root.minsize(780, 600)
+            self.root.geometry("800x850")  # 增加高度
+            self.root.minsize(780, 800)    # 增加最小高度
             
         self.root.resizable(True, True)
         
@@ -152,7 +152,7 @@ class ExcelProcessorUI:
         main_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw", width=content_width)
         
         # 主框架
-        main_frame = ttk.Frame(scrollable_frame, padding="20 20 20 20", style="TFrame")
+        main_frame = ttk.Frame(scrollable_frame, padding="15 15 15 15", style="TFrame")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
         # 绑定鼠标滚轮事件
@@ -178,11 +178,11 @@ class ExcelProcessorUI:
         
         # 标题
         header = ttk.Label(main_frame, text="Excel数据处理工具", style="Header.TLabel")
-        header.pack(pady=(0, 20))
+        header.pack(pady=(0, 15))  # 减小间距
         
         # 创建自定义选项卡的框架
         tab_frames_container = ttk.Frame(main_frame)
-        tab_frames_container.pack(fill=tk.BOTH, expand=True, pady=(0, 20), padx=5)
+        tab_frames_container.pack(fill=tk.BOTH, expand=True, pady=(0, 15), padx=5)  # 减小间距
         
         # 创建选项卡按钮框架
         tab_buttons_frame = ttk.Frame(tab_frames_container)
@@ -193,9 +193,9 @@ class ExcelProcessorUI:
         content_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 5))
         
         # 创建A/B/输出设置的框架 - 使用统一的背景色
-        a_tab = ttk.Frame(content_frame, padding="10", style="TabContent.TFrame")
-        b_tab = ttk.Frame(content_frame, padding="10", style="TabContent.TFrame")
-        output_tab = ttk.Frame(content_frame, padding="10", style="TabContent.TFrame")
+        a_tab = ttk.Frame(content_frame, padding="8", style="TabContent.TFrame")  # 减小内边距
+        b_tab = ttk.Frame(content_frame, padding="8", style="TabContent.TFrame")  # 减小内边距
+        output_tab = ttk.Frame(content_frame, padding="8", style="TabContent.TFrame")  # 减小内边距
         
         # 当前选中的选项卡
         self.current_tab = tk.StringVar(value="a_tab")  # 默认显示A表
@@ -204,7 +204,7 @@ class ExcelProcessorUI:
         tab_button_style = {
             "font": ("微软雅黑", 11),
             "padx": 30,
-            "pady": 10,
+            "pady": 8,  # 减小内边距
             "bd": 1,
             "relief": "flat",  # 平面风格更美观
             "cursor": "hand2",
@@ -298,7 +298,7 @@ class ExcelProcessorUI:
         result_frame.pack(fill=tk.BOTH, expand=True, pady=(10, 0))
         
         # 使用Text控件显示结果
-        self.result_text = tk.Text(result_frame, height=6, wrap=tk.WORD)
+        self.result_text = tk.Text(result_frame, height=10, wrap=tk.WORD)
         self.result_text.pack(fill=tk.BOTH, expand=True)
         
         # 滚动条
@@ -355,7 +355,7 @@ class ExcelProcessorUI:
         # 创建Treeview
         columns = ("序号", "文件路径", "工作表名称")
         self.files_tree = ttk.Treeview(tree_container, columns=columns, show="headings", 
-                                       height=7, yscrollcommand=tree_vsb.set, xscrollcommand=tree_hsb.set)
+                                       height=11, yscrollcommand=tree_vsb.set, xscrollcommand=tree_hsb.set)
         
         # 设置滚动条的命令
         tree_vsb.config(command=self.files_tree.yview)
@@ -889,4 +889,6 @@ if __name__ == "__main__":
     main()
 
     # todo: 添加日志，能否直接保存到程序里面，还是保存到本地文件
+    # todo: 日报表，文件路径显示不完全
+    # todo: 处理结果框，太小了
     
