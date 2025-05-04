@@ -496,24 +496,11 @@ class ExcelProcessorUI:
         col_frame = ttk.Frame(parent, style="TFrame")
         col_frame.pack(fill=tk.X, pady=5)
         
-        ttk.Label(col_frame, text="比较列 (如A, B, C或1, 2, 3):", style="TLabel").pack(side=tk.LEFT)
+        ttk.Label(col_frame, text="比较列:", style="TLabel").pack(side=tk.LEFT)
         
         self.a_column = tk.StringVar()
         col_entry = ttk.Entry(col_frame, textvariable=self.a_column, width=5)
         col_entry.pack(side=tk.LEFT, padx=5)
-        
-        # 说明
-        info_frame = ttk.LabelFrame(parent, text="说明", style="TFrame")
-        info_frame.pack(fill=tk.BOTH, expand=False, pady=10)
-        
-        info_text = """日报表是源数据表，程序将查找此表中指定列与患者库匹配的行。
-- 文件列表：可以添加多个Excel文件进行批量处理
-- 工作表名称：可以为每个文件单独设置工作表名称，也可以使用通用工作表名应用到所有文件
-- 比较列：用于与患者库比较的列，可以是字母(A,B,C)或数字(1,2,3)
-- 对于含有多个工作表的Excel文件，可以单独指定要处理的工作表
-- 系统会自动检测表头中包含"日期"的列，并将其格式化为中文日期格式"""
-        
-        ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
     
     def setup_b_tab(self, parent):
         # B表文件路径 - 使用可伸缩布局，确保按钮始终可见
@@ -557,28 +544,17 @@ class ExcelProcessorUI:
         sheet_entry = ttk.Entry(sheet_frame, textvariable=self.b_sheet_name, width=20)
         sheet_entry.pack(side=tk.LEFT, padx=5)
         
-        ttk.Label(sheet_frame, text="(留空使用默认活动表)", style="TLabel").pack(side=tk.LEFT)
+        ttk.Label(sheet_frame, style="TLabel").pack(side=tk.LEFT)
         
         # B表列选择
         col_frame = ttk.Frame(parent, style="TFrame")
         col_frame.pack(fill=tk.X, pady=5)
         
-        ttk.Label(col_frame, text="比较列 (如A, B, C或1, 2, 3):", style="TLabel").pack(side=tk.LEFT)
+        ttk.Label(col_frame, text="比较列:", style="TLabel").pack(side=tk.LEFT)
         
         self.b_column = tk.StringVar()
         col_entry = ttk.Entry(col_frame, textvariable=self.b_column, width=5)
         col_entry.pack(side=tk.LEFT, padx=5)
-        
-        # 说明
-        info_frame = ttk.LabelFrame(parent, text="说明", style="TFrame")
-        info_frame.pack(fill=tk.BOTH, expand=True, pady=10)
-        
-        info_text = """患者库是对比数据表，程序将查找日报表中与此表指定列匹配的行。
-- 文件路径：Excel文件的完整路径
-- 工作表名称：要处理的工作表名称，留空将使用默认活动表
-- 比较列：用于与日报表比较的列，可以是字母(A,B,C)或数字(1,2,3)"""
-        
-        ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
     
     def setup_output_tab(self, parent):
         # 输出文件夹路径 - 使用可伸缩布局
@@ -633,26 +609,7 @@ class ExcelProcessorUI:
         sheet_entry = ttk.Entry(sheet_frame, textvariable=self.output_sheet_name, width=20)
         sheet_entry.pack(side=tk.LEFT, padx=5)
         
-        ttk.Label(sheet_frame, text="(默认为'匹配结果')", style="TLabel").pack(side=tk.LEFT)
-        
-        # 说明
-        info_frame = ttk.LabelFrame(parent, text="说明", style="TFrame")
-        info_frame.pack(fill=tk.BOTH, expand=True, pady=10)
-        
-        info_text = """输出设置决定匹配结果保存的位置。
-- 输出文件夹：选择保存结果文件的文件夹
-- 输出文件名：结果文件的名称
-- 工作表名称：结果将保存在此工作表中
-        
-注意：
-1. 实际保存的文件名会自动添加时间戳，以避免覆盖现有文件
-2. 程序会自动将日报表中的第一行作为表头复制到结果文件
-3. 如果日报表中包含公式，只会保存计算结果，不保存公式本身
-4. 程序会自动识别并保持原日报表中的合并单元格状态
-5. 当处理多个日报表文件时，所有匹配的行将合并到一个结果文件中
-6. 系统会自动检测表头中包含"日期"或"时间"的列，并将其格式化为中文日期格式(如"5月1日")"""
-        
-        ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
+        ttk.Label(sheet_frame, style="TLabel").pack(side=tk.LEFT)
     
     def add_a_file(self):
         """添加日报表文件到列表"""
