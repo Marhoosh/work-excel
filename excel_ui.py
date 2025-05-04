@@ -237,31 +237,8 @@ class ExcelProcessorUI:
         canvas.configure(scrollregion=canvas.bbox("all"))
     
     def setup_a_tab(self, parent):
-        # 创建一个滚动容器
-        a_container = ttk.Frame(parent, style="TFrame")
-        a_container.pack(fill=tk.BOTH, expand=True)
-        
-        # 创建Canvas用于滚动
-        a_canvas = tk.Canvas(a_container)
-        a_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        
-        # 添加垂直滚动条
-        a_vsb = ttk.Scrollbar(a_container, orient="vertical", command=a_canvas.yview)
-        a_vsb.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        # 添加水平滚动条
-        a_hsb = ttk.Scrollbar(parent, orient="horizontal", command=a_canvas.xview)
-        a_hsb.pack(side=tk.BOTTOM, fill=tk.X)
-        
-        # 配置Canvas
-        a_canvas.configure(yscrollcommand=a_vsb.set, xscrollcommand=a_hsb.set)
-        
-        # 创建框架
-        a_frame = ttk.Frame(a_canvas, style="TFrame")
-        a_window = a_canvas.create_window((0, 0), window=a_frame, anchor="nw")
-        
         # A表文件列表框架
-        files_frame = ttk.LabelFrame(a_frame, text="日报表文件列表", padding="10 10 10 10")
+        files_frame = ttk.LabelFrame(parent, text="日报表文件列表", padding="10 10 10 10")
         files_frame.pack(fill=tk.BOTH, expand=True, pady=5)
         
         # 文件列表显示区域
@@ -342,15 +319,15 @@ class ExcelProcessorUI:
         button_canvas.bind("<Configure>", lambda e: button_canvas.itemconfig(
             button_frame_window, width=e.width))
         
-        # 通用工作表名称区域
-        common_sheet_frame = ttk.LabelFrame(a_frame, text="工作表设置")
-        common_sheet_frame.pack(fill=tk.X, pady=10, padx=5)
+        # 通用工作表名称区域 - 使用流式布局
+        common_sheet_frame = ttk.Frame(parent)
+        common_sheet_frame.pack(fill=tk.X, pady=10)
         
-        # 创建容器
+        # 创建一个容器
         sheet_wrapper = ttk.Frame(common_sheet_frame)
-        sheet_wrapper.pack(fill=tk.X, expand=True)
+        sheet_wrapper.pack(fill=tk.X)
         
-        ttk.Label(sheet_wrapper, text="通用工作表名称:", style="TLabel").pack(side=tk.LEFT, padx=(5, 0))
+        ttk.Label(sheet_wrapper, text="通用工作表名称:", style="TLabel").pack(side=tk.LEFT)
         
         common_sheet_entry = ttk.Entry(sheet_wrapper, textvariable=self.a_common_sheet, width=20)
         common_sheet_entry.pack(side=tk.LEFT, padx=5)
@@ -361,7 +338,7 @@ class ExcelProcessorUI:
         ttk.Label(sheet_wrapper, text="(留空使用各文件的默认活动表)", style="TLabel").pack(side=tk.LEFT)
         
         # A表列选择
-        col_frame = ttk.Frame(a_frame, style="TFrame")
+        col_frame = ttk.Frame(parent, style="TFrame")
         col_frame.pack(fill=tk.X, pady=5)
         
         ttk.Label(col_frame, text="比较列 (如A, B, C或1, 2, 3):", style="TLabel").pack(side=tk.LEFT)
@@ -371,7 +348,7 @@ class ExcelProcessorUI:
         col_entry.pack(side=tk.LEFT, padx=5)
         
         # 说明
-        info_frame = ttk.LabelFrame(a_frame, text="说明", style="TFrame")
+        info_frame = ttk.LabelFrame(parent, text="说明", style="TFrame")
         info_frame.pack(fill=tk.BOTH, expand=False, pady=10)
         
         info_text = """日报表是源数据表，程序将查找此表中指定列与患者库匹配的行。
@@ -382,41 +359,10 @@ class ExcelProcessorUI:
 - 系统会自动检测表头中包含"日期"的列，并将其格式化为中文日期格式"""
         
         ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
-        
-        # 更新a_frame的大小
-        a_frame.update_idletasks()
-        a_canvas.config(scrollregion=a_canvas.bbox("all"))
-        
-        # 添加Canvas大小调整事件
-        a_canvas.bind("<Configure>", lambda e: a_canvas.itemconfig(
-            a_window, width=e.width))
     
     def setup_b_tab(self, parent):
-        # 创建一个滚动容器
-        b_container = ttk.Frame(parent, style="TFrame")
-        b_container.pack(fill=tk.BOTH, expand=True)
-        
-        # 创建Canvas用于滚动
-        b_canvas = tk.Canvas(b_container)
-        b_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        
-        # 添加垂直滚动条
-        b_vsb = ttk.Scrollbar(b_container, orient="vertical", command=b_canvas.yview)
-        b_vsb.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        # 添加水平滚动条
-        b_hsb = ttk.Scrollbar(parent, orient="horizontal", command=b_canvas.xview)
-        b_hsb.pack(side=tk.BOTTOM, fill=tk.X)
-        
-        # 配置Canvas
-        b_canvas.configure(yscrollcommand=b_vsb.set, xscrollcommand=b_hsb.set)
-        
-        # 创建框架
-        b_frame = ttk.Frame(b_canvas, style="TFrame")
-        b_window = b_canvas.create_window((0, 0), window=b_frame, anchor="nw")
-        
         # B表文件路径 - 使用可伸缩布局，确保按钮始终可见
-        path_frame = ttk.Frame(b_frame, style="TFrame")
+        path_frame = ttk.Frame(parent, style="TFrame")
         path_frame.pack(fill=tk.X, pady=(10, 5))
         
         ttk.Label(path_frame, text="患者库文件路径:", style="TLabel").pack(side=tk.LEFT)
@@ -435,7 +381,7 @@ class ExcelProcessorUI:
         browse_button.pack(side=tk.RIGHT)
         
         # B表工作表名称
-        sheet_frame = ttk.Frame(b_frame, style="TFrame")
+        sheet_frame = ttk.Frame(parent, style="TFrame")
         sheet_frame.pack(fill=tk.X, pady=5)
         
         ttk.Label(sheet_frame, text="工作表名称:", style="TLabel").pack(side=tk.LEFT)
@@ -447,7 +393,7 @@ class ExcelProcessorUI:
         ttk.Label(sheet_frame, text="(留空使用默认活动表)", style="TLabel").pack(side=tk.LEFT)
         
         # B表列选择
-        col_frame = ttk.Frame(b_frame, style="TFrame")
+        col_frame = ttk.Frame(parent, style="TFrame")
         col_frame.pack(fill=tk.X, pady=5)
         
         ttk.Label(col_frame, text="比较列 (如A, B, C或1, 2, 3):", style="TLabel").pack(side=tk.LEFT)
@@ -457,7 +403,7 @@ class ExcelProcessorUI:
         col_entry.pack(side=tk.LEFT, padx=5)
         
         # 说明
-        info_frame = ttk.LabelFrame(b_frame, text="说明", style="TFrame")
+        info_frame = ttk.LabelFrame(parent, text="说明", style="TFrame")
         info_frame.pack(fill=tk.BOTH, expand=True, pady=10)
         
         info_text = """患者库是对比数据表，程序将查找日报表中与此表指定列匹配的行。
@@ -466,41 +412,10 @@ class ExcelProcessorUI:
 - 比较列：用于与日报表比较的列，可以是字母(A,B,C)或数字(1,2,3)"""
         
         ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
-        
-        # 更新b_frame的大小
-        b_frame.update_idletasks()
-        b_canvas.config(scrollregion=b_canvas.bbox("all"))
-        
-        # 添加Canvas大小调整事件
-        b_canvas.bind("<Configure>", lambda e: b_canvas.itemconfig(
-            b_window, width=e.width))
     
     def setup_output_tab(self, parent):
-        # 创建一个滚动容器
-        output_container = ttk.Frame(parent, style="TFrame")
-        output_container.pack(fill=tk.BOTH, expand=True)
-        
-        # 创建Canvas用于滚动
-        output_canvas = tk.Canvas(output_container)
-        output_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        
-        # 添加垂直滚动条
-        output_vsb = ttk.Scrollbar(output_container, orient="vertical", command=output_canvas.yview)
-        output_vsb.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        # 添加水平滚动条
-        output_hsb = ttk.Scrollbar(parent, orient="horizontal", command=output_canvas.xview)
-        output_hsb.pack(side=tk.BOTTOM, fill=tk.X)
-        
-        # 配置Canvas
-        output_canvas.configure(yscrollcommand=output_vsb.set, xscrollcommand=output_hsb.set)
-        
-        # 创建框架
-        output_frame = ttk.Frame(output_canvas, style="TFrame")
-        output_window = output_canvas.create_window((0, 0), window=output_frame, anchor="nw")
-        
         # 输出文件夹路径 - 使用可伸缩布局
-        path_frame = ttk.Frame(output_frame, style="TFrame")
+        path_frame = ttk.Frame(parent, style="TFrame")
         path_frame.pack(fill=tk.X, pady=(10, 5))
         
         ttk.Label(path_frame, text="输出文件夹:", style="TLabel").pack(side=tk.LEFT)
@@ -519,7 +434,7 @@ class ExcelProcessorUI:
         browse_button.pack(side=tk.RIGHT)
         
         # 输出文件名
-        file_frame = ttk.Frame(output_frame, style="TFrame")
+        file_frame = ttk.Frame(parent, style="TFrame")
         file_frame.pack(fill=tk.X, pady=5)
         
         ttk.Label(file_frame, text="输出文件名:", style="TLabel").pack(side=tk.LEFT)
@@ -530,7 +445,7 @@ class ExcelProcessorUI:
         file_entry.pack(side=tk.LEFT, padx=5)
         
         # 输出工作表名称
-        sheet_frame = ttk.Frame(output_frame, style="TFrame")
+        sheet_frame = ttk.Frame(parent, style="TFrame")
         sheet_frame.pack(fill=tk.X, pady=5)
         
         ttk.Label(sheet_frame, text="工作表名称:", style="TLabel").pack(side=tk.LEFT)
@@ -542,7 +457,7 @@ class ExcelProcessorUI:
         ttk.Label(sheet_frame, text="(默认为'匹配结果')", style="TLabel").pack(side=tk.LEFT)
         
         # 说明
-        info_frame = ttk.LabelFrame(output_frame, text="说明", style="TFrame")
+        info_frame = ttk.LabelFrame(parent, text="说明", style="TFrame")
         info_frame.pack(fill=tk.BOTH, expand=True, pady=10)
         
         info_text = """输出设置决定匹配结果保存的位置。
@@ -559,14 +474,6 @@ class ExcelProcessorUI:
 6. 系统会自动检测表头中包含"日期"或"时间"的列，并将其格式化为中文日期格式(如"5月1日")"""
         
         ttk.Label(info_frame, text=info_text, style="TLabel", wraplength=650, justify=tk.LEFT).pack(pady=5)
-        
-        # 更新output_frame的大小
-        output_frame.update_idletasks()
-        output_canvas.config(scrollregion=output_canvas.bbox("all"))
-        
-        # 添加Canvas大小调整事件
-        output_canvas.bind("<Configure>", lambda e: output_canvas.itemconfig(
-            output_window, width=e.width))
     
     def add_a_file(self):
         """添加日报表文件到列表"""
