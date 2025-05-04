@@ -6,6 +6,56 @@ import sys
 import importlib.util
 import platform
 
+# 添加tkmacosx导入，用于Mac平台
+try:
+    if platform.system() == "Darwin":  # 仅在Mac系统上导入
+        import tkmacosx
+except ImportError:
+    print("tkmacosx库未安装，Mac平台上的按钮样式将无法正常显示")
+    print("请使用以下命令安装: pip install tkmacosx")
+
+# 添加一个函数来检查并提供安装tkmacosx的选项
+def check_mac_dependencies(root):
+    """检查Mac平台依赖并提供安装选项"""
+    if platform.system() == "Darwin" and 'tkmacosx' not in sys.modules:
+        response = messagebox.askyesno(
+            "库缺失", 
+            "检测到您正在使用Mac系统，但没有安装tkmacosx库。\n"
+            "这会导致按钮样式无法正常显示。\n\n"
+            "是否尝试自动安装tkmacosx库？\n"
+            "(需要联网，安装完成后需要重启应用)"
+        )
+        
+        if response:
+            try:
+                import subprocess
+                print("正在安装tkmacosx...")
+                result = subprocess.call([sys.executable, "-m", "pip", "install", "tkmacosx"])
+                
+                if result == 0:
+                    messagebox.showinfo(
+                        "安装成功", 
+                        "tkmacosx库安装成功！\n"
+                        "请重启应用以应用更改。"
+                    )
+                    root.destroy()  # 关闭应用以便重启
+                    return True
+                else:
+                    messagebox.showerror(
+                        "安装失败", 
+                        "tkmacosx库安装失败。\n"
+                        "请手动使用以下命令安装：\n"
+                        "pip install tkmacosx"
+                    )
+            except Exception as e:
+                messagebox.showerror(
+                    "安装错误", 
+                    f"安装过程中出现错误：\n{str(e)}\n\n"
+                    "请手动使用以下命令安装：\n"
+                    "pip install tkmacosx"
+                )
+    return False
+
 # 处理PyInstaller打包后的资源路径
 def resource_path(relative_path):
     """获取资源的绝对路径，处理PyInstaller打包后的路径问题"""
@@ -42,6 +92,16 @@ def import_excel_processor():
 
 # 获取process_excel_files函数
 process_excel_files = import_excel_processor()
+
+# 在适当的位置创建一个函数用于创建按钮，根据平台选择不同的按钮类
+def create_button(parent, **kwargs):
+    """根据平台创建合适的按钮"""
+    if platform.system() == "Darwin" and 'tkmacosx' in sys.modules:
+        # 在Mac上使用tkmacosx.Button
+        return tkmacosx.Button(parent, **kwargs)
+    else:
+        # 其他平台使用tk.Button
+        return tk.Button(parent, **kwargs)
 
 class ExcelProcessorUI:
     def __init__(self, root):
@@ -240,13 +300,13 @@ class ExcelProcessorUI:
             self.current_tab.set(tab_name)
         
         # 创建选项卡按钮
-        a_button = tk.Button(tab_buttons_frame, text="日报表", command=lambda: show_tab("a_tab"), **tab_button_style)
+        a_button = create_button(tab_buttons_frame, text="日报表", command=lambda: show_tab("a_tab"), **tab_button_style)
         a_button.pack(side=tk.LEFT)
         
-        b_button = tk.Button(tab_buttons_frame, text="患者库", command=lambda: show_tab("b_tab"), **tab_button_style)
+        b_button = create_button(tab_buttons_frame, text="患者库", command=lambda: show_tab("b_tab"), **tab_button_style)
         b_button.pack(side=tk.LEFT)
         
-        output_button = tk.Button(tab_buttons_frame, text="输出设置", command=lambda: show_tab("output_tab"), **tab_button_style)
+        output_button = create_button(tab_buttons_frame, text="输出设置", command=lambda: show_tab("output_tab"), **tab_button_style)
         output_button.pack(side=tk.LEFT)
         
         # 默认显示A表选项卡
@@ -270,7 +330,7 @@ class ExcelProcessorUI:
         process_frame.pack(fill=tk.X, pady=(10, 5))
         
         # 由于ttk样式限制，使用纯tk按钮来实现彩色按钮
-        process_button = tk.Button(
+        process_button = create_button(
             process_frame, 
             text="开始处理数据", 
             command=self.process_data,
@@ -385,7 +445,7 @@ class ExcelProcessorUI:
         button_frame_window = button_canvas.create_window((0,0), window=button_frame, anchor="nw")
         
         # 添加文件按钮
-        add_file_button = tk.Button(
+        add_file_button = create_button(
             button_frame, 
             text="添加文件", 
             command=self.add_a_file,
@@ -401,7 +461,7 @@ class ExcelProcessorUI:
         add_file_button.pack(side=tk.LEFT, padx=5)
         
         # 删除选中文件按钮
-        remove_file_button = tk.Button(
+        remove_file_button = create_button(
             button_frame, 
             text="删除选中", 
             command=self.remove_a_file,
@@ -417,7 +477,7 @@ class ExcelProcessorUI:
         remove_file_button.pack(side=tk.LEFT, padx=5)
         
         # 清空所有文件按钮
-        clear_files_button = tk.Button(
+        clear_files_button = create_button(
             button_frame, 
             text="清空列表", 
             command=self.clear_a_files,
@@ -433,7 +493,7 @@ class ExcelProcessorUI:
         clear_files_button.pack(side=tk.LEFT, padx=5)
         
         # 设置工作表名按钮
-        set_sheet_button = tk.Button(
+        set_sheet_button = create_button(
             button_frame, 
             text="设置工作表名", 
             command=self.set_sheet_name,
@@ -475,7 +535,7 @@ class ExcelProcessorUI:
         common_sheet_entry = ttk.Entry(sheet_wrapper, textvariable=self.a_common_sheet, width=20)
         common_sheet_entry.pack(side=tk.LEFT, padx=5)
         
-        apply_common_button = tk.Button(
+        apply_common_button = create_button(
             sheet_wrapper, 
             text="应用到所有文件", 
             command=self.apply_common_sheet,
@@ -519,7 +579,7 @@ class ExcelProcessorUI:
         path_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
         
         # 确保按钮始终可见
-        browse_button = tk.Button(
+        browse_button = create_button(
             entry_button_frame, 
             text="浏览...", 
             command=self.browse_b_file,
@@ -573,7 +633,7 @@ class ExcelProcessorUI:
         path_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
         
         # 确保按钮始终可见
-        browse_button = tk.Button(
+        browse_button = create_button(
             entry_button_frame, 
             text="浏览...", 
             command=self.browse_output_folder,
@@ -859,6 +919,10 @@ def main():
     
     # 检测平台，为Mac调整字体和界面元素
     if platform.system() == "Darwin":  # macOS
+        # 检查并尝试安装Mac依赖
+        if check_mac_dependencies(root):
+            return  # 如果安装成功并需要重启，则直接退出
+            
         try:
             # 在Mac上应用默认字体
             default_font = tkfont.nametofont("TkDefaultFont")
