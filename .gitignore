@@ -16,3 +16,4 @@ venv/
 dist/
 build/
 *.egg-info/ 
+build_env/
