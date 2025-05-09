@@ -61,27 +61,27 @@ jobs:
           name: mac-build
           path: dist/program-mac
 
-release:
-  needs: [build-windows, build-mac]
-  runs-on: ubuntu-latest
-  steps:
-    - name: 下载构建产物
-      uses: actions/download-artifact@v2
-      with:
-        path: ./builds
-        
-    - name: 创建Release
-      uses: ncipollo/release-action@v1
-      with:
-        artifacts: "./builds/windows-build/program-win.exe,./builds/mac-build/program-mac"
-        token: ${{ secrets.GITEE_TOKEN }}
-        tag: ${{ github.ref }}
-        name: Release ${{ github.ref_name }}
-        draft: false
-        prerelease: false
+  release:
+    needs: [build-windows, build-mac]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 下载构建产物
+        uses: actions/download-artifact@v2
+        with:
+          path: ./builds
+          
+      - name: 创建Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "./builds/windows-build/program-win.exe,./builds/mac-build/program-mac"
+          token: ${{ secrets.GITEE_TOKEN }}
+          tag: ${{ github.ref }}
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
 
-    - name: 设置版本号
-      run: |
-        VERSION=$(echo ${{ github.ref_name }} | sed 's/v//')
-        echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: 设置版本号
+        run: |
+          VERSION=$(echo ${{ github.ref_name }} | sed 's/v//')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
         
