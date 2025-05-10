@@ -81,19 +81,19 @@ jobs:
             
             # 手动修改spec文件而不使用sed，避免语法错误
             python3 -c "
-              import re
-              with open('excel-app-intel.spec', 'r') as f:
-                  content = f.read()
-              # 修改target_arch
-              content = re.sub(r'target_arch=None', r'target_arch=\"x86_64\"', content)
-              # 修改name参数 - 仅修改EXE部分
-              content = re.sub(r'name=([\'\\\"]).+?\\1', r'name=\"Excel数据处理工具-intel\"', content)
-              # 修改app名称 - 如果有BUNDLE部分
-              if 'BUNDLE' in content:
-                  content = re.sub(r'name=([\'\\\"]).+?.app\\1', r'name=\"Excel数据处理工具-intel.app\"', content)
-              with open('excel-app-intel.spec', 'w') as f:
-                  f.write(content)
-              "
+import re
+with open('excel-app-intel.spec', 'r') as f:
+    content = f.read()
+# 修改target_arch
+content = re.sub(r'target_arch=None', r'target_arch=\"x86_64\"', content)
+# 修改name参数 - 仅修改EXE部分
+content = re.sub(r'name=([\'\\\"]).+?\\1', r'name=\"Excel数据处理工具-intel\"', content)
+# 修改app名称 - 如果有BUNDLE部分
+if 'BUNDLE' in content:
+    content = re.sub(r'name=([\'\\\"]).+?.app\\1', r'name=\"Excel数据处理工具-intel.app\"', content)
+with open('excel-app-intel.spec', 'w') as f:
+    f.write(content)
+"
             # 显示修改后的spec文件内容
             echo "修改后的spec文件内容:"
             cat excel-app-intel.spec
@@ -153,19 +153,19 @@ jobs:
             
             # 手动修改spec文件而不使用sed，避免语法错误
             python3 -c "
-              import re
-              with open('excel-app-arm.spec', 'r') as f:
-                  content = f.read()
-              # 修改target_arch
-              content = re.sub(r'target_arch=None', r'target_arch=\"arm64\"', content)
-              # 修改name参数 - 仅修改EXE部分
-              content = re.sub(r'name=([\'\\\"]).+?\\1', r'name=\"Excel数据处理工具-arm\"', content)
-              # 修改app名称 - 如果有BUNDLE部分
-              if 'BUNDLE' in content:
-                  content = re.sub(r'name=([\'\\\"]).+?.app\\1', r'name=\"Excel数据处理工具-arm.app\"', content)
-              with open('excel-app-arm.spec', 'w') as f:
-                  f.write(content)
-              "
+import re
+with open('excel-app-arm.spec', 'r') as f:
+    content = f.read()
+# 修改target_arch
+content = re.sub(r'target_arch=None', r'target_arch=\"arm64\"', content)
+# 修改name参数 - 仅修改EXE部分
+content = re.sub(r'name=([\'\\\"]).+?\\1', r'name=\"Excel数据处理工具-arm\"', content)
+# 修改app名称 - 如果有BUNDLE部分
+if 'BUNDLE' in content:
+    content = re.sub(r'name=([\'\\\"]).+?.app\\1', r'name=\"Excel数据处理工具-arm.app\"', content)
+with open('excel-app-arm.spec', 'w') as f:
+    f.write(content)
+"
             # 显示修改后的spec文件内容
             echo "修改后的spec文件内容:"
             cat excel-app-arm.spec
