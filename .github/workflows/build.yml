@@ -3,8 +3,12 @@ name: 构建Windows和Mac可执行程序
 
 on:
   push:
+    # 暂时允许所有推送都触发构建
     # tags:
     #   - 'v*'  # 当推送带v开头的tag时触发，例如v1.0.0
+    
+permissions:
+  contents: write # 允许工作流创建release和上传文件
 
 jobs:
   build-windows:
@@ -34,12 +38,18 @@ jobs:
               # 如果spec文件不存在，使用命令行参数
               pyinstaller --onefile --windowed --name "Excel数据处理工具" excel_ui.py
           }
-          
-      - name: 上传构建结果
-        uses: actions/upload-artifact@v2
+      
+      # 直接打包构建结果，不使用upload-artifact
+      - name: 压缩Windows构建结果
+        run: |
+          Compress-Archive -Path dist\Excel数据处理工具.exe -DestinationPath windows-build.zip
+      
+      # 将构建结果作为工作流产物上传（这是另一种方式，不使用actions/upload-artifact）
+      - name: 上传Windows构建结果
+        uses: actions/upload-artifact@v1
         with:
           name: windows-build
-          path: dist/Excel数据处理工具.exe
+          path: windows-build.zip
   
   build-mac:
     runs-on: macos-latest
@@ -68,30 +78,53 @@ jobs:
             # 如果spec文件不存在，使用命令行参数
             pyinstaller --onefile --windowed --name "Excel数据处理工具" excel_ui.py
           fi
-          
-      - name: 上传构建结果
-        uses: actions/upload-artifact@v2
+      
+      # 直接打包构建结果，不使用upload-artifact
+      - name: 压缩Mac构建结果
+        run: |
+          cd dist && zip -r ../mac-build.zip "Excel数据处理工具"
+      
+      # 将构建结果作为工作流产物上传
+      - name: 上传Mac构建结果
+        uses: actions/upload-artifact@v1
         with:
           name: mac-build
-          path: dist/Excel数据处理工具
+          path: mac-build.zip
 
+  # 如果是tag推送，创建Release
   release:
     needs: [build-windows, build-mac]
     runs-on: ubuntu-latest
-    # 仅在推送tag时创建Release
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - name: 下载构建产物
-        uses: actions/download-artifact@v2
+      # 拉取代码
+      - uses: actions/checkout@v3
+      
+      # 下载构建产物
+      - name: 下载Windows构建产物
+        uses: actions/download-artifact@v1
         with:
-          path: ./builds
-          
+          name: windows-build
+      
+      - name: 下载Mac构建产物
+        uses: actions/download-artifact@v1
+        with:
+          name: mac-build
+      
+      # 解压缩构建产物
+      - name: 解压缩构建产物
+        run: |
+          unzip -o windows-build/windows-build.zip -d ./
+          unzip -o mac-build/mac-build.zip -d ./
+      
+      # 创建Release并上传文件
       - name: 创建Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ./builds/windows-build/Excel数据处理工具.exe
-            ./builds/mac-build/Excel数据处理工具
+            Excel数据处理工具.exe
+            Excel数据处理工具
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
