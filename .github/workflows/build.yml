@@ -75,13 +75,16 @@ jobs:
             pyinstaller --onefile --windowed --name "Excel数据处理工具" excel_ui.py
           fi
 
+      - name: 查看打包内容
+        run: ls -l dist/
+
 
       # 将构建结果作为工作流产物上传
       - name: 上传Mac构建结果
         uses: actions/upload-artifact@v4
         with:
           name: mac-build
-          path: dist/Excel数据处理工具.app
+          path: dist/Excel数据处理工具
 
   # 如果是tag推送，创建Release
   release:
