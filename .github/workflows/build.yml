@@ -81,7 +81,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mac-build
-          path: dist/Excel数据处理工具
+          path: dist/Excel数据处理工具.app
 
   # 如果是tag推送，创建Release
   release:
