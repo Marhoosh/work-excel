@@ -1,4 +1,4 @@
-# .gitee/workflows/build.yml
+# GitHub工作流配置
 name: 构建Windows和Mac可执行程序
 
 on:
@@ -36,7 +36,7 @@ jobs:
           }
           
       - name: 上传构建结果
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: windows-build
           path: dist/Excel数据处理工具.exe
@@ -70,7 +70,7 @@ jobs:
           fi
           
       - name: 上传构建结果
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: mac-build
           path: dist/Excel数据处理工具
@@ -78,24 +78,20 @@ jobs:
   release:
     needs: [build-windows, build-mac]
     runs-on: ubuntu-latest
+    # 仅在推送tag时创建Release
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: 下载构建产物
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v2
         with:
           path: ./builds
           
       - name: 创建Release
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v1
         with:
-          artifacts: "./builds/windows-build/Excel数据处理工具.exe,./builds/mac-build/Excel数据处理工具"
-          token: ${{ secrets.GITEE_TOKEN }}
-          tag: ${{ github.ref }}
-          name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: false
-
-      - name: 设置版本号
-        run: |
-          VERSION=$(echo ${{ github.ref_name }} | sed 's/v//')
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          files: |
+            ./builds/windows-build/Excel数据处理工具.exe
+            ./builds/mac-build/Excel数据处理工具
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
