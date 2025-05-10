@@ -36,14 +36,15 @@ jobs:
               pyinstaller --noconfirm excel-app.spec
           } else {
               # 如果spec文件不存在，使用命令行参数
-              pyinstaller --onefile --windowed --name "报表小助手" excel_ui.py
+              pyinstaller --onefile --windowed --name "ExcelHelper" excel_ui.py
           }
       
+      # 将构建结果作为工作流产物上传
       - name: 上传Windows构建结果
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
-          path: dist\报表小助手.exe
+          path: windows-build.zip
   
   build-mac:
     runs-on: macos-latest
@@ -65,99 +66,54 @@ jobs:
           
       - name: 构建Mac可执行文件 
         run: |
+          # 优先使用spec文件打包
           if [ -f "excel-app.spec" ]; then
-            sed -i '' 's/报表小助手/ExcelHelper/g' excel-app.spec
             pyinstaller --noconfirm excel-app.spec
           else
+            # 如果spec文件不存在，使用命令行参数
             pyinstaller --onefile --windowed --name "ExcelHelper" excel_ui.py
           fi
-          
-          echo "构建结果:"
-          ls -la dist/
-          
-      - name: 准备Mac应用包
-        run: |
-          mkdir -p mac_app/报表小助手.app/Contents/MacOS
-          mkdir -p mac_app/报表小助手.app/Contents/Resources
-          
-          if [ -f "dist/ExcelHelper" ]; then
-            cp dist/ExcelHelper mac_app/报表小助手.app/Contents/MacOS/ExcelHelper
-          else
-            EXEC_FILE=$(find dist -type f -not -name "*.py" -not -name "*.pyc" | head -1)
-            if [ -n "$EXEC_FILE" ]; then
-              cp "$EXEC_FILE" mac_app/报表小助手.app/Contents/MacOS/ExcelHelper
-            else
-              echo "错误: 无法找到可执行文件"
-              exit 1
-            fi
-          fi
-          
-          chmod +x mac_app/报表小助手.app/Contents/MacOS/ExcelHelper
-          
-      - name: 创建Info.plist文件
-        working-directory: mac_app/报表小助手.app/Contents
-        run: |
-          cat > Info.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>CFBundleDisplayName</key>
-            <string>报表小助手</string>
-            <key>CFBundleExecutable</key>
-            <string>ExcelHelper</string>
-            <key>CFBundleIdentifier</key>
-            <string>com.yourcompany.excelhelper</string>
-            <key>CFBundleInfoDictionaryVersion</key>
-            <string>6.0</string>
-            <key>CFBundleName</key>
-            <string>报表小助手</string>
-            <key>CFBundlePackageType</key>
-            <string>APPL</string>
-            <key>CFBundleShortVersionString</key>
-            <string>1.0.0</string>
-            <key>NSHighResolutionCapable</key>
-            <true/>
-            <key>NSPrincipalClass</key>
-            <string>NSApplication</string>
-          </dict>
-          </plist>
-          EOF
-          
-      - name: 打包Mac应用
-        working-directory: mac_app
-        run: |
-          zip -r 报表小助手-Mac.zip 报表小助手.app
       
+      # 将构建结果作为工作流产物上传
       - name: 上传Mac构建结果
         uses: actions/upload-artifact@v4
         with:
           name: mac-build
-          path: mac_app/报表小助手-Mac.zip
-  
+          path: mac-build.zip
+
+  # 如果是tag推送，创建Release
   release:
     needs: [build-windows, build-mac]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
+      # 拉取代码
+      - uses: actions/checkout@v3
+      
+      # 下载构建产物
       - name: 下载Windows构建产物
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v1
         with:
           name: windows-build
-          path: ./windows-build
       
       - name: 下载Mac构建产物
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v1
         with:
           name: mac-build
-          path: ./mac-build
       
+      # 解压缩构建产物
+      - name: 解压缩构建产物
+        run: |
+          unzip -o windows-build/windows-build.zip -d ./
+          unzip -o mac-build/mac-build.zip -d ./
+      
+      # 创建Release并上传文件
       - name: 创建Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ./windows-build/报表小助手.exe
-            ./mac-build/报表小助手-Mac.zip
+            ExcelHelper.exe
+            ExcelHelper
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
