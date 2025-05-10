@@ -104,7 +104,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='excel_icon.ico' if sys.platform == 'win32' else None,
+    icon=None,  # 暂时不使用图标
     version='file_version_info.txt' if os.path.exists('file_version_info.txt') else None,
 )
 
