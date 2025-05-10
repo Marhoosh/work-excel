@@ -39,17 +39,17 @@ jobs:
               pyinstaller --onefile --windowed --name "Excel数据处理工具" excel_ui.py
           }
       
-      # 直接打包构建结果，不使用upload-artifact
-      - name: 压缩Windows构建结果
-        run: |
-          Compress-Archive -Path dist\Excel数据处理工具.exe -DestinationPath windows-build.zip
+      # # 直接打包构建结果，不使用upload-artifact
+      # - name: 压缩Windows构建结果
+      #   run: |
+      #     Compress-Archive -Path dist\Excel数据处理工具.exe -DestinationPath windows-build.zip
       
-      # 将构建结果作为工作流产物上传（这是另一种方式，不使用actions/upload-artifact）
-      - name: 上传Windows构建结果
-        uses: actions/upload-artifact@v1
-        with:
-          name: windows-build
-          path: windows-build.zip
+      # # 将构建结果作为工作流产物上传（这是另一种方式，不使用actions/upload-artifact）
+      # - name: 上传Windows构建结果
+      #   uses: actions/upload-artifact@v1
+      #   with:
+      #     name: windows-build
+      #     path: windows-build.zip
   
   build-mac:
     runs-on: macos-latest
