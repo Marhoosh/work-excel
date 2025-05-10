@@ -70,13 +70,35 @@ jobs:
           # 使用环境变量强制为x86_64架构构建
           export ARCHFLAGS="-arch x86_64"
           
-          # 优先使用spec文件打包
+          # 修改spec文件并打包
           if [ -f "excel-app.spec" ]; then
+            # 复制spec文件
             cp excel-app.spec excel-app-intel.spec
-            # 修改spec文件中的target_arch设置
-            sed -i '' 's/target_arch=None/target_arch="x86_64"/g' excel-app-intel.spec
-            # 修改输出文件名以区分不同架构
-            sed -i '' 's/name=.Excel数据处理工具./name="Excel数据处理工具-intel"/g' excel-app-intel.spec
+            
+            # 显示当前spec文件内容
+            echo "当前spec文件内容:"
+            cat excel-app-intel.spec
+            
+            # 手动修改spec文件而不使用sed，避免语法错误
+            python3 -c "
+              import re
+              with open('excel-app-intel.spec', 'r') as f:
+                  content = f.read()
+              # 修改target_arch
+              content = re.sub(r'target_arch=None', r'target_arch=\"x86_64\"', content)
+              # 修改name参数 - 仅修改EXE部分
+              content = re.sub(r'name=([\'\\\"]).+?\\1', r'name=\"Excel数据处理工具-intel\"', content)
+              # 修改app名称 - 如果有BUNDLE部分
+              if 'BUNDLE' in content:
+                  content = re.sub(r'name=([\'\\\"]).+?.app\\1', r'name=\"Excel数据处理工具-intel.app\"', content)
+              with open('excel-app-intel.spec', 'w') as f:
+                  f.write(content)
+              "
+            # 显示修改后的spec文件内容
+            echo "修改后的spec文件内容:"
+            cat excel-app-intel.spec
+            
+            # 使用修改后的spec文件
             pyinstaller --noconfirm excel-app-intel.spec
           else
             # 如果spec文件不存在，使用命令行参数并指定target-arch
@@ -120,13 +142,35 @@ jobs:
           # 使用环境变量强制为arm64架构构建
           export ARCHFLAGS="-arch arm64"
           
-          # 优先使用spec文件打包
+          # 修改spec文件并打包
           if [ -f "excel-app.spec" ]; then
+            # 复制spec文件
             cp excel-app.spec excel-app-arm.spec
-            # 修改spec文件中的target_arch设置
-            sed -i '' 's/target_arch=None/target_arch="arm64"/g' excel-app-arm.spec
-            # 修改输出文件名以区分不同架构
-            sed -i '' 's/name=.Excel数据处理工具./name="Excel数据处理工具-arm"/g' excel-app-arm.spec
+            
+            # 显示当前spec文件内容
+            echo "当前spec文件内容:"
+            cat excel-app-arm.spec
+            
+            # 手动修改spec文件而不使用sed，避免语法错误
+            python3 -c "
+              import re
+              with open('excel-app-arm.spec', 'r') as f:
+                  content = f.read()
+              # 修改target_arch
+              content = re.sub(r'target_arch=None', r'target_arch=\"arm64\"', content)
+              # 修改name参数 - 仅修改EXE部分
+              content = re.sub(r'name=([\'\\\"]).+?\\1', r'name=\"Excel数据处理工具-arm\"', content)
+              # 修改app名称 - 如果有BUNDLE部分
+              if 'BUNDLE' in content:
+                  content = re.sub(r'name=([\'\\\"]).+?.app\\1', r'name=\"Excel数据处理工具-arm.app\"', content)
+              with open('excel-app-arm.spec', 'w') as f:
+                  f.write(content)
+              "
+            # 显示修改后的spec文件内容
+            echo "修改后的spec文件内容:"
+            cat excel-app-arm.spec
+            
+            # 使用修改后的spec文件
             pyinstaller --noconfirm excel-app-arm.spec
           else
             # 如果spec文件不存在，使用命令行参数并指定target-arch
@@ -164,6 +208,9 @@ jobs:
           
       - name: 创建通用二进制文件
         run: |
+          ls -la ./mac-intel
+          ls -la ./mac-arm
+          
           mkdir -p ./universal/Excel数据处理工具.app/Contents/MacOS
           
           # 找到Intel和ARM可执行文件
