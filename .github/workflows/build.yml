@@ -39,6 +39,7 @@ jobs:
               pyinstaller --onefile --windowed --name "Excel数据处理工具" excel_ui.py
           }
       
+      
       # 将构建结果作为工作流产物上传
       - name: 上传Windows构建结果
         uses: actions/upload-artifact@v4
@@ -46,8 +47,7 @@ jobs:
           name: windows-build
           path: dist\Excel数据处理工具.exe
   
-  build-mac-intel:
-    # 构建Intel版本
+  build-mac:
     runs-on: macos-latest
     steps:
       - name: 拉取代码
@@ -65,215 +65,27 @@ jobs:
           pip install pillow
           pip install -r requirements.txt
           
-      - name: 构建Mac可执行文件 (Intel x86_64) 
+      - name: 构建Mac可执行文件 
         run: |
-          # 使用环境变量强制为x86_64架构构建
-          export ARCHFLAGS="-arch x86_64"
-          
-          # 修改spec文件并打包
+          # 优先使用spec文件打包
           if [ -f "excel-app.spec" ]; then
-            # 复制spec文件
-            cp excel-app.spec excel-app-intel.spec
-            
-            # 显示当前spec文件内容
-            echo "当前spec文件内容:"
-            cat excel-app-intel.spec
-            
-            # 手动修改spec文件而不使用sed，避免语法错误
-            python3 -c "
-import re
-with open('excel-app-intel.spec', 'r') as f:
-    content = f.read()
-# 修改target_arch
-content = re.sub(r'target_arch=None', r'target_arch=\"x86_64\"', content)
-# 修改name参数 - 仅修改EXE部分
-content = re.sub(r'name=([\'\\\"]).+?\\1', r'name=\"Excel数据处理工具-intel\"', content)
-# 修改app名称 - 如果有BUNDLE部分
-if 'BUNDLE' in content:
-    content = re.sub(r'name=([\'\\\"]).+?.app\\1', r'name=\"Excel数据处理工具-intel.app\"', content)
-with open('excel-app-intel.spec', 'w') as f:
-    f.write(content)
-"
-            # 显示修改后的spec文件内容
-            echo "修改后的spec文件内容:"
-            cat excel-app-intel.spec
-            
-            # 使用修改后的spec文件
-            pyinstaller --noconfirm excel-app-intel.spec
+            pyinstaller --noconfirm excel-app.spec
           else
-            # 如果spec文件不存在，使用命令行参数并指定target-arch
-            pyinstaller --onefile --windowed --name "Excel数据处理工具-intel" --target-arch x86_64 excel_ui.py
+            # 如果spec文件不存在，使用命令行参数
+            pyinstaller --onefile --windowed --name "Excel数据处理工具" excel_ui.py
           fi
 
-      - name: 查看打包内容
-        run: |
-          ls -la dist/
-          # 检查文件类型和架构
-          file dist/Excel数据处理工具-intel || file dist/Excel数据处理工具-intel.app/Contents/MacOS/Excel数据处理工具-intel
 
       # 将构建结果作为工作流产物上传
-      - name: 上传Mac Intel构建结果
+      - name: 上传Mac构建结果
         uses: actions/upload-artifact@v4
         with:
-          name: mac-intel-build
-          path: dist/Excel数据处理工具-intel*
-
-  build-mac-arm:
-    # 构建ARM版本
-    runs-on: macos-latest
-    steps:
-      - name: 拉取代码
-        uses: actions/checkout@v3
-      
-      - name: 设置Python环境
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-          
-      - name: 安装依赖
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyinstaller
-          pip install pillow
-          pip install -r requirements.txt
-          
-      - name: 构建Mac可执行文件 (ARM64) 
-        run: |
-          # 使用环境变量强制为arm64架构构建
-          export ARCHFLAGS="-arch arm64"
-          
-          # 修改spec文件并打包
-          if [ -f "excel-app.spec" ]; then
-            # 复制spec文件
-            cp excel-app.spec excel-app-arm.spec
-            
-            # 显示当前spec文件内容
-            echo "当前spec文件内容:"
-            cat excel-app-arm.spec
-            
-            # 手动修改spec文件而不使用sed，避免语法错误
-            python3 -c "
-import re
-with open('excel-app-arm.spec', 'r') as f:
-    content = f.read()
-# 修改target_arch
-content = re.sub(r'target_arch=None', r'target_arch=\"arm64\"', content)
-# 修改name参数 - 仅修改EXE部分
-content = re.sub(r'name=([\'\\\"]).+?\\1', r'name=\"Excel数据处理工具-arm\"', content)
-# 修改app名称 - 如果有BUNDLE部分
-if 'BUNDLE' in content:
-    content = re.sub(r'name=([\'\\\"]).+?.app\\1', r'name=\"Excel数据处理工具-arm.app\"', content)
-with open('excel-app-arm.spec', 'w') as f:
-    f.write(content)
-"
-            # 显示修改后的spec文件内容
-            echo "修改后的spec文件内容:"
-            cat excel-app-arm.spec
-            
-            # 使用修改后的spec文件
-            pyinstaller --noconfirm excel-app-arm.spec
-          else
-            # 如果spec文件不存在，使用命令行参数并指定target-arch
-            pyinstaller --onefile --windowed --name "Excel数据处理工具-arm" --target-arch arm64 excel_ui.py
-          fi
-
-      - name: 查看打包内容
-        run: |
-          ls -la dist/
-          # 检查文件类型和架构
-          file dist/Excel数据处理工具-arm || file dist/Excel数据处理工具-arm.app/Contents/MacOS/Excel数据处理工具-arm
-
-      # 将构建结果作为工作流产物上传
-      - name: 上传Mac ARM构建结果
-        uses: actions/upload-artifact@v4
-        with:
-          name: mac-arm-build
-          path: dist/Excel数据处理工具-arm*
-
-  create-universal-binary:
-    needs: [build-mac-intel, build-mac-arm]
-    runs-on: macos-latest
-    steps:
-      - name: 下载Intel构建产物
-        uses: actions/download-artifact@v4
-        with:
-          name: mac-intel-build
-          path: ./mac-intel
-          
-      - name: 下载ARM构建产物
-        uses: actions/download-artifact@v4
-        with:
-          name: mac-arm-build
-          path: ./mac-arm
-          
-      - name: 创建通用二进制文件
-        run: |
-          ls -la ./mac-intel
-          ls -la ./mac-arm
-          
-          mkdir -p ./universal/Excel数据处理工具.app/Contents/MacOS
-          
-          # 找到Intel和ARM可执行文件
-          INTEL_EXEC=$(find ./mac-intel -type f -not -path "*.app/Contents/Resources/*" -not -path "*.app/Contents/Info.plist" | grep -v ".zip$" | head -1)
-          ARM_EXEC=$(find ./mac-arm -type f -not -path "*.app/Contents/Resources/*" -not -path "*.app/Contents/Info.plist" | grep -v ".zip$" | head -1)
-          
-          echo "Intel executable: $INTEL_EXEC"
-          echo "ARM executable: $ARM_EXEC"
-          
-          if [ -n "$INTEL_EXEC" ] && [ -n "$ARM_EXEC" ]; then
-            # 创建Universal Binary
-            lipo -create "$INTEL_EXEC" "$ARM_EXEC" -output ./universal/Excel数据处理工具.app/Contents/MacOS/Excel数据处理工具
-            chmod +x ./universal/Excel数据处理工具.app/Contents/MacOS/Excel数据处理工具
-            
-            # 创建Info.plist
-            cat > ./universal/Excel数据处理工具.app/Contents/Info.plist << EOF
-              <?xml version="1.0" encoding="UTF-8"?>
-              <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-              <plist version="1.0">
-              <dict>
-                <key>CFBundleDisplayName</key>
-                <string>Excel数据处理工具</string>
-                <key>CFBundleExecutable</key>
-                <string>Excel数据处理工具</string>
-                <key>CFBundleIdentifier</key>
-                <string>com.yourcompany.excelhelper</string>
-                <key>CFBundleInfoDictionaryVersion</key>
-                <string>6.0</string>
-                <key>CFBundleName</key>
-                <string>Excel数据处理工具</string>
-                <key>CFBundlePackageType</key>
-                <string>APPL</string>
-                <key>CFBundleShortVersionString</key>
-                <string>1.0.0</string>
-                <key>NSHighResolutionCapable</key>
-                <true/>
-                <key>NSPrincipalClass</key>
-                <string>NSApplication</string>
-              </dict>
-              </plist>
-              EOF
-            
-            # 打包为zip
-            cd ./universal
-            zip -r Excel数据处理工具-Mac-通用版.zip Excel数据处理工具.app
-            
-            # 检查通用二进制
-            file Excel数据处理工具.app/Contents/MacOS/Excel数据处理工具
-          else
-            echo "未找到Intel或ARM可执行文件"
-            exit 1
-          fi
-      
-      # 将通用二进制上传为工作流产物
-      - name: 上传Mac通用二进制
-        uses: actions/upload-artifact@v4
-        with:
-          name: mac-universal-build
-          path: ./universal/Excel数据处理工具-Mac-通用版.zip
+          name: mac-build
+          path: dist/Excel数据处理工具
 
   # 如果是tag推送，创建Release
   release:
-    needs: [build-windows, create-universal-binary]
+    needs: [build-windows, build-mac]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
@@ -282,24 +94,28 @@ with open('excel-app-arm.spec', 'w') as f:
       
       # 下载构建产物
       - name: 下载Windows构建产物
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v1
         with:
           name: windows-build
-          path: ./windows-build
       
-      - name: 下载Mac通用构建产物
-        uses: actions/download-artifact@v4
+      - name: 下载Mac构建产物
+        uses: actions/download-artifact@v1
         with:
-          name: mac-universal-build
-          path: ./mac-universal-build
+          name: mac-build
+      
+      # 解压缩构建产物
+      - name: 解压缩构建产物
+        run: |
+          unzip -o windows-build/windows-build.zip -d ./
+          unzip -o mac-build/mac-build.zip -d ./
       
       # 创建Release并上传文件
       - name: 创建Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ./windows-build/Excel数据处理工具.exe
-            ./mac-universal-build/Excel数据处理工具-Mac-通用版.zip
+            Excel数据处理工具.exe
+            Excel数据处理工具
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
