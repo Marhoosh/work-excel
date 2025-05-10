@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows  
+    runs-on: windows-latest
     steps:
       - name: 拉取代码
         uses: actions/checkout@v2
@@ -22,20 +22,27 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
+          pip install pillow
           pip install -r requirements.txt
           
       - name: 构建Windows可执行文件
         run: |
-          pyinstaller --onefile --windowed --name program-win excel_ui.py
+          # 优先使用spec文件打包
+          if (Test-Path -Path "excel-app.spec") {
+              pyinstaller --noconfirm excel-app.spec
+          } else {
+              # 如果spec文件不存在，使用命令行参数
+              pyinstaller --onefile --windowed --name "Excel数据处理工具" excel_ui.py
+          }
           
       - name: 上传构建结果
         uses: actions/upload-artifact@v2
         with:
           name: windows-build
-          path: dist/program-win.exe
+          path: dist/Excel数据处理工具.exe
   
   build-mac:
-    runs-on: macos
+    runs-on: macos-latest
     steps:
       - name: 拉取代码
         uses: actions/checkout@v2
@@ -49,17 +56,24 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
+          pip install pillow
           pip install -r requirements.txt
           
       - name: 构建Mac可执行文件 
         run: |
-          pyinstaller --onefile --windowed --name program-mac excel_ui.py
+          # 优先使用spec文件打包
+          if [ -f "excel-app.spec" ]; then
+            pyinstaller --noconfirm excel-app.spec
+          else
+            # 如果spec文件不存在，使用命令行参数
+            pyinstaller --onefile --windowed --name "Excel数据处理工具" excel_ui.py
+          fi
           
       - name: 上传构建结果
         uses: actions/upload-artifact@v2
         with:
           name: mac-build
-          path: dist/program-mac
+          path: dist/Excel数据处理工具
 
   release:
     needs: [build-windows, build-mac]
@@ -73,7 +87,7 @@ jobs:
       - name: 创建Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "./builds/windows-build/program-win.exe,./builds/mac-build/program-mac"
+          artifacts: "./builds/windows-build/Excel数据处理工具.exe,./builds/mac-build/Excel数据处理工具"
           token: ${{ secrets.GITEE_TOKEN }}
           tag: ${{ github.ref }}
           name: Release ${{ github.ref_name }}
