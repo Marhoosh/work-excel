@@ -39,12 +39,13 @@ jobs:
               pyinstaller --onefile --windowed --name "Excel数据处理工具" excel_ui.py
           }
       
+      
       # 将构建结果作为工作流产物上传
       - name: 上传Windows构建结果
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
-          path: windows-build.zip
+          path: dist\Excel数据处理工具.exe
   
   build-mac:
     runs-on: macos-latest
@@ -73,13 +74,14 @@ jobs:
             # 如果spec文件不存在，使用命令行参数
             pyinstaller --onefile --windowed --name "Excel数据处理工具" excel_ui.py
           fi
-      
+
+
       # 将构建结果作为工作流产物上传
       - name: 上传Mac构建结果
         uses: actions/upload-artifact@v4
         with:
           name: mac-build
-          path: mac-build.zip
+          path: dist/Excel数据处理工具
 
   # 如果是tag推送，创建Release
   release:
