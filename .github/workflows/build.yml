@@ -11,10 +11,10 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: 拉取代码
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       
       - name: 设置Python环境
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
           
@@ -36,7 +36,7 @@ jobs:
           }
           
       - name: 上传构建结果
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: windows-build
           path: dist/Excel数据处理工具.exe
@@ -45,10 +45,10 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: 拉取代码
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       
       - name: 设置Python环境
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
           
@@ -70,7 +70,7 @@ jobs:
           fi
           
       - name: 上传构建结果
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: mac-build
           path: dist/Excel数据处理工具
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 下载构建产物
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: ./builds
           
