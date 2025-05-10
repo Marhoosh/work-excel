@@ -36,7 +36,7 @@ jobs:
               pyinstaller --noconfirm excel-app.spec
           } else {
               # 如果spec文件不存在，使用命令行参数
-              pyinstaller --onefile --windowed --name "ExcelHelper" excel_ui.py
+              pyinstaller --onefile --windowed --name "Excel数据处理工具" excel_ui.py
           }
       
       
@@ -44,8 +44,8 @@ jobs:
       - name: 上传Windows构建结果
         uses: actions/upload-artifact@v4
         with:
-          name: ExcelHelper-windows
-          path: dist\ExcelHelper.exe
+          name: windows-build
+          path: dist\Excel数据处理工具.exe
   
   build-mac:
     runs-on: macos-latest
@@ -72,7 +72,7 @@ jobs:
             pyinstaller --noconfirm excel-app.spec
           else
             # 如果spec文件不存在，使用命令行参数
-            pyinstaller --onefile --windowed --name "ExcelHelper" excel_ui.py
+            pyinstaller --onefile --windowed --name "Excel数据处理工具" excel_ui.py
           fi
 
 
@@ -80,8 +80,8 @@ jobs:
       - name: 上传Mac构建结果
         uses: actions/upload-artifact@v4
         with:
-          name: ExcelHelper-mac
-          path: dist/ExcelHelper
+          name: mac-build
+          path: dist/Excel数据处理工具
 
   # 如果是tag推送，创建Release
   release:
@@ -114,8 +114,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ExcelHelper.exe
-            ExcelHelper
+            Excel数据处理工具.exe
+            Excel数据处理工具
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
