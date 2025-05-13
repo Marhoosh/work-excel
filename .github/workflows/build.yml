@@ -4,8 +4,8 @@ name: 构建Windows和Mac可执行程序
 on:
   push:
     # 暂时允许所有推送都触发构建
-    # tags:
-    #   - 'v*'  # 当推送带v开头的tag时触发，例如v1.0.0
+    tags:
+      - 'v*'  # 当推送带v开头的tag时触发，例如v1.0.0
     
 permissions:
   contents: write # 允许工作流创建release和上传文件
