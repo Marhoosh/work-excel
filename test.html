@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Excel匹配工具原型</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f7f9fa; margin: 0; }
+    .navbar { background: #2d8cf0; color: #fff; padding: 16px 32px; display: flex; align-items: center; }
+    .navbar .logo { font-size: 1.5em; font-weight: bold; margin-right: 32px; }
+    .navbar nav a { color: #fff; margin: 0 16px; text-decoration: none; font-size: 1.1em; }
+    .container { max-width: 900px; margin: 32px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+    h2 { margin-top: 0; }
+    .file-upload { margin-bottom: 24px; }
+    .file-list { margin: 12px 0; }
+    .file-item { background: #f0f4f8; padding: 8px 12px; border-radius: 4px; margin-bottom: 6px; display: flex; align-items: center; }
+    .file-item i { margin-right: 8px; color: #2d8cf0; }
+    .select-group { display: flex; gap: 24px; margin-bottom: 24px; }
+    .select-block { flex: 1; }
+    label { display: block; margin-bottom: 6px; font-weight: 500; }
+    select, input[type="file"] { width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #ccc; }
+    .btn { background: #2d8cf0; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; font-size: 1em; cursor: pointer; margin-right: 12px; }
+    .btn i { margin-right: 6px; }
+    .btn:disabled { background: #b3d4fc; cursor: not-allowed; }
+    .result-table { width: 100%; border-collapse: collapse; margin: 24px 0; }
+    .result-table th, .result-table td { border: 1px solid #e0e0e0; padding: 8px; text-align: left; }
+    .result-table th { background: #f5f7fa; }
+    .history-list { list-style: none; padding: 0; }
+    .history-list li { padding: 8px 0; border-bottom: 1px solid #eee; }
+    .help-content { color: #555; }
+    .step { margin-bottom: 16px; }
+    .step i { color: #2d8cf0; margin-right: 8px; }
+  </style>
+</head>
+<body>
+  <!-- 导航栏 -->
+  <div class="navbar">
+    <span class="logo"><i class="fa-solid fa-file-excel"></i> Excel匹配工具</span>
+    <nav>
+      <a href="#import"><i class="fa-solid fa-upload"></i> 导入文件</a>
+      <a href="#match"><i class="fa-solid fa-link"></i> 匹配设置</a>
+      <a href="#result"><i class="fa-solid fa-table"></i> 匹配结果</a>
+      <a href="#history"><i class="fa-solid fa-clock-rotate-left"></i> 历史记录</a>
+      <a href="#help"><i class="fa-solid fa-circle-question"></i> 帮助</a>
+    </nav>
+  </div>
+
+  <div class="container" id="import">
+    <h2><i class="fa-solid fa-upload"></i> 导入文件</h2>
+    <div class="file-upload">
+      <label>上传报表文件（可多选）</label>
+      <input type="file" multiple>
+      <div class="file-list">
+        <div class="file-item"><i class="fa-solid fa-file-excel"></i> report1.xlsx</div>
+        <div class="file-item"><i class="fa-solid fa-file-excel"></i> report2.xlsx</div>
+      </div>
+    </div>
+    <div class="file-upload">
+      <label>上传患者库文件（单个）</label>
+      <input type="file">
+      <div class="file-list">
+        <div class="file-item"><i class="fa-solid fa-file-excel"></i> patient_db.xlsx</div>
+      </div>
+    </div>
+    <button class="btn"><i class="fa-solid fa-arrow-right"></i> 下一步</button>
+  </div>
+
+  <div class="container" id="match">
+    <h2><i class="fa-solid fa-link"></i> 匹配设置</h2>
+    <div class="select-group">
+      <div class="select-block">
+        <label>选择报表文件</label>
+        <select>
+          <option>report1.xlsx</option>
+          <option>report2.xlsx</option>
+        </select>
+        <label>选择表格</label>
+        <select>
+          <option>Sheet1</option>
+          <option>Sheet2</option>
+        </select>
+        <label>选择列</label>
+        <select>
+          <option>姓名</option>
+          <option>身份证号</option>
+        </select>
+      </div>
+      <div class="select-block">
+        <label>选择患者库文件</label>
+        <select>
+          <option>patient_db.xlsx</option>
+        </select>
+        <label>选择表格</label>
+        <select>
+          <option>Sheet1</option>
+        </select>
+        <label>选择列</label>
+        <select>
+          <option>姓名</option>
+          <option>身份证号</option>
+        </select>
+      </div>
+    </div>
+    <label>匹配规则</label>
+    <select>
+      <option>完全匹配</option>
+      <option>模糊匹配</option>
+    </select>
+    <br><br>
+    <button class="btn"><i class="fa-solid fa-play"></i> 开始匹配</button>
+  </div>
+
+  <div class="container" id="result">
+    <h2><i class="fa-solid fa-table"></i> 匹配结果</h2>
+    <table class="result-table">
+      <tr>
+        <th>姓名</th>
+        <th>身份证号</th>
+        <th>匹配状态</th>
+      </tr>
+      <tr>
+        <td>张三</td>
+        <td>1234567890</td>
+        <td><i class="fa-solid fa-check-circle" style="color:green"></i> 匹配成功</td>
+      </tr>
+      <tr>
+        <td>李四</td>
+        <td>9876543210</td>
+        <td><i class="fa-solid fa-times-circle" style="color:red"></i> 未匹配</td>
+      </tr>
+    </table>
+    <button class="btn"><i class="fa-solid fa-download"></i> 下载结果Excel</button>
+    <button class="btn" style="background:#aaa"><i class="fa-solid fa-arrow-left"></i> 返回首页</button>
+  </div>
+
+  <div class="container" id="history">
+    <h2><i class="fa-solid fa-clock-rotate-left"></i> 历史记录</h2>
+    <ul class="history-list">
+      <li><i class="fa-solid fa-file-excel"></i> 2024-06-01 匹配结果 <button class="btn" style="padding:4px 12px;font-size:0.9em;"><i class="fa-solid fa-download"></i> 下载</button></li>
+      <li><i class="fa-solid fa-file-excel"></i> 2024-05-28 匹配结果 <button class="btn" style="padding:4px 12px;font-size:0.9em;"><i class="fa-solid fa-download"></i> 下载</button></li>
+    </ul>
+  </div>
+
+  <div class="container" id="help">
+    <h2><i class="fa-solid fa-circle-question"></i> 帮助</h2>
+    <div class="help-content">
+      <div class="step"><i class="fa-solid fa-1"></i> 上传报表文件和患者库文件</div>
+      <div class="step"><i class="fa-solid fa-2"></i> 选择需要匹配的表格和列</div>
+      <div class="step"><i class="fa-solid fa-3"></i> 设置匹配规则并开始匹配</div>
+      <div class="step"><i class="fa-solid fa-4"></i> 下载匹配结果</div>
+      <p>如有疑问请联系技术支持。</p>
+    </div>
+  </div>
+</body>
+</html>
