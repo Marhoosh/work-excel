@@ -771,7 +771,7 @@ def process_excel_files(file_a_paths, file_b_path, output_path, col_x, col_y, sh
 def main():
     """测试函数，演示如何使用本模块"""
     # 文件路径直接写在代码中
-    file_a_path = ["麓城店日报表2025.5.2.xlsx", "中医馆芙蓉店日报表2025.05.03.xls"]  # 使用相同文件测试多文件处理
+    file_a_path = ["中医馆芙蓉店日报表2025.05.03.xls"]  # 使用相同文件测试多文件处理
     file_b_path = "患者库.xlsx"
     output_path = "匹配结果.xlsx"  # 输出文件路径
     
@@ -784,8 +784,8 @@ def main():
     print("=" * 60)
     
     # 指定要使用的工作表名称
-    sheet_a_name = "5.1"  # A表中的工作表
-    sheet_b_name = "Sheet2"  # B表中的工作表
+    sheet_a_name = "5.3"  # A表中的工作表
+    sheet_b_name = "Sheet1"  # B表中的工作表
     output_sheet_name = "5月日报"  # 输出工作表名称
     
     # 指定比较的列
